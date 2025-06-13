@@ -17,7 +17,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()  // libera POST /register
+                        .requestMatchers(HttpMethod.POST, "/api/auth/*").permitAll()
                         .anyRequest().authenticated()  // qualquer outro endpoint precisa de JWT
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));  // valida JWT para endpoints protegidos
