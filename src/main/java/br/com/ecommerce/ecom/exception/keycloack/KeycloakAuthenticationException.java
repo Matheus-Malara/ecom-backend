@@ -1,6 +1,6 @@
-package br.com.ecommerce.ecom.config.exception.keycloack;
+package br.com.ecommerce.ecom.exception.keycloack;
 
-import br.com.ecommerce.ecom.config.exception.BusinessException;
+import br.com.ecommerce.ecom.exception.BusinessException;
 import br.com.ecommerce.ecom.enums.ErrorCode;
 import org.springframework.http.HttpStatus;
 

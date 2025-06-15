@@ -12,7 +12,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class UserRepresentation {
 
-    private String id; // você não precisa setar isso quando criar — o Keycloak gera
+    private String id;
     private String username;
     private String email;
     private Boolean emailVerified;
@@ -20,6 +20,5 @@ public class UserRepresentation {
     private String firstName;
     private String lastName;
 
-    // você pode adicionar attributes se quiser (exemplo: telefone, CPF, etc)
     private Map<String, List<String>> attributes;
 }

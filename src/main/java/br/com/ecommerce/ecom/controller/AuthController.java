@@ -28,7 +28,7 @@ public class AuthController {
     private final ResponseFactory responseFactory;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterUserRequestDTO request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<Void>> register(@RequestBody @Valid RegisterUserRequestDTO request, HttpServletRequest httpRequest) {
 
         keycloakAdminClientService.createUser(request, "USER");
 
@@ -36,7 +36,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO request, HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody @Valid LoginRequestDTO request, HttpServletRequest httpRequest) {
 
         LoginResponseDTO loginResponse = keycloakLoginService.loginUser(request);
 

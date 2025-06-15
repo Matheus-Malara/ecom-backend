@@ -62,9 +62,11 @@ public class Product {
     private String flavor;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ProductImage> images = new ArrayList<>();
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 
     @Column(nullable = false, updatable = false)

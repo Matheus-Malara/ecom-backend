@@ -33,5 +33,6 @@ public class Category {
     private String imageUrl;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 }

@@ -1,9 +1,9 @@
 package br.com.ecommerce.ecom.service;
 
-import br.com.ecommerce.ecom.config.exception.ResourceNotFoundException;
 import br.com.ecommerce.ecom.dto.requests.CategoryRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.CategoryResponseDTO;
 import br.com.ecommerce.ecom.entity.Category;
+import br.com.ecommerce.ecom.exception.CategoryNotFoundException;
 import br.com.ecommerce.ecom.mappers.CategoryMapper;
 import br.com.ecommerce.ecom.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
@@ -35,14 +35,12 @@ public class CategoryService {
     }
 
     public CategoryResponseDTO getCategoryById(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        Category category = findByIdOrThrow(id);
         return categoryMapper.toResponseDTO(category);
     }
 
     public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO dto) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        Category category = findByIdOrThrow(id);
 
         categoryMapper.updateEntityFromDTO(dto, category);
         Category updatedCategory = categoryRepository.save(category);
@@ -51,8 +49,12 @@ public class CategoryService {
     }
 
     public void deleteCategory(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        Category category = findByIdOrThrow(id);
         categoryRepository.delete(category);
+    }
+
+    private Category findByIdOrThrow(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
     }
 }

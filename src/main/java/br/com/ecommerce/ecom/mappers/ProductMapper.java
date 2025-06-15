@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
+    // Entity → ResponseDTO
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "images", target = "imageUrls", qualifiedByName = "mapImageUrls")
@@ -20,11 +21,7 @@ public interface ProductMapper {
 
     @Named("mapImageUrls")
     default List<String> mapImageUrls(List<ProductImage> images) {
-        if (images == null) {
-            return List.of();
-        }
-        return images.stream()
-                .map(ProductImage::getImageUrl)
-                .collect(Collectors.toList());
+        if (images == null) return List.of();
+        return images.stream().map(ProductImage::getImageUrl).collect(Collectors.toList());
     }
 }

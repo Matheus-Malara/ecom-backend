@@ -1,10 +1,10 @@
 package br.com.ecommerce.ecom.service.keycloack;
 
 import br.com.ecommerce.ecom.client.feign.keycloack.KeycloakUserClient;
-import br.com.ecommerce.ecom.config.exception.BusinessException;
-import br.com.ecommerce.ecom.config.exception.EmailAlreadyInUseException;
-import br.com.ecommerce.ecom.config.exception.keycloack.KeycloakAuthenticationException;
-import br.com.ecommerce.ecom.config.exception.keycloack.KeycloakUserNotFoundException;
+import br.com.ecommerce.ecom.exception.BusinessException;
+import br.com.ecommerce.ecom.exception.EmailAlreadyInUseException;
+import br.com.ecommerce.ecom.exception.keycloack.KeycloakAuthenticationException;
+import br.com.ecommerce.ecom.exception.keycloack.KeycloakUserNotFoundException;
 import br.com.ecommerce.ecom.config.keycloack.KeycloakProperties;
 import br.com.ecommerce.ecom.dto.requests.RegisterUserRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.KeycloakTokenResponse;

@@ -1,12 +1,14 @@
 package br.com.ecommerce.ecom.service;
 
-import br.com.ecommerce.ecom.config.exception.ResourceNotFoundException;
 import br.com.ecommerce.ecom.dto.requests.ProductRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
 import br.com.ecommerce.ecom.entity.Brand;
 import br.com.ecommerce.ecom.entity.Category;
 import br.com.ecommerce.ecom.entity.Product;
 import br.com.ecommerce.ecom.entity.ProductImage;
+import br.com.ecommerce.ecom.exception.BrandNotFoundException;
+import br.com.ecommerce.ecom.exception.CategoryNotFoundException;
+import br.com.ecommerce.ecom.exception.ProductNotFoundException;
 import br.com.ecommerce.ecom.mappers.ProductMapper;
 import br.com.ecommerce.ecom.repository.BrandRepository;
 import br.com.ecommerce.ecom.repository.CategoryRepository;
@@ -29,11 +31,8 @@ public class ProductService {
     private final ProductMapper productMapper;
 
     public ProductResponseDTO createProduct(ProductRequestDTO dto) {
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + dto.getCategoryId()));
-
-        Brand brand = brandRepository.findById(dto.getBrandId())
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + dto.getBrandId()));
+        Category category = findCategoryByIdOrThrow(dto.getCategoryId());
+        Brand brand = findBrandByIdOrThrow(dto.getBrandId());
 
         Product product = Product.builder()
                 .name(dto.getName())
@@ -47,18 +46,10 @@ public class ProductService {
                 .active(true)
                 .build();
 
-        // Map imageUrls to ProductImage list
-        List<ProductImage> images = dto.getImageUrls().stream()
-                .map(url -> ProductImage.builder()
-                        .imageUrl(url)
-                        .product(product)
-                        .build())
-                .collect(Collectors.toList());
-
+        List<ProductImage> images = convertToProductImages(dto.getImageUrls(), product);
         product.setImages(images);
 
         Product savedProduct = productRepository.save(product);
-
         return productMapper.toResponseDTO(savedProduct);
     }
 
@@ -70,20 +61,14 @@ public class ProductService {
     }
 
     public ProductResponseDTO getProductById(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        Product product = findProductByIdOrThrow(id);
         return productMapper.toResponseDTO(product);
     }
 
     public ProductResponseDTO updateProduct(Long id, ProductRequestDTO dto) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + dto.getCategoryId()));
-
-        Brand brand = brandRepository.findById(dto.getBrandId())
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + dto.getBrandId()));
+        Product product = findProductByIdOrThrow(id);
+        Category category = findCategoryByIdOrThrow(dto.getCategoryId());
+        Brand brand = findBrandByIdOrThrow(dto.getBrandId());
 
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
@@ -94,24 +79,43 @@ public class ProductService {
         product.setWeightGrams(dto.getWeightGrams());
         product.setFlavor(dto.getFlavor());
 
-        // Replace images
         product.getImages().clear();
-        List<ProductImage> images = dto.getImageUrls().stream()
-                .map(url -> ProductImage.builder()
-                        .imageUrl(url)
-                        .product(product)
-                        .build())
-                .toList();
+        List<ProductImage> images = convertToProductImages(dto.getImageUrls(), product);
         product.getImages().addAll(images);
 
         Product updatedProduct = productRepository.save(product);
-
         return productMapper.toResponseDTO(updatedProduct);
     }
 
     public void deleteProduct(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        Product product = findProductByIdOrThrow(id);
         productRepository.delete(product);
+    }
+
+    // ========= Helpers =========
+
+    private List<ProductImage> convertToProductImages(List<String> imageUrls, Product product) {
+        return imageUrls.stream()
+                .distinct() // evita imagens duplicadas
+                .map(url -> ProductImage.builder()
+                        .imageUrl(url)
+                        .product(product)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private Product findProductByIdOrThrow(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+    }
+
+    private Category findCategoryByIdOrThrow(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+    }
+
+    private Brand findBrandByIdOrThrow(Long id) {
+        return brandRepository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
     }
 }

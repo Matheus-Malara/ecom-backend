@@ -1,9 +1,9 @@
 package br.com.ecommerce.ecom.service;
 
-import br.com.ecommerce.ecom.config.exception.ResourceNotFoundException;
 import br.com.ecommerce.ecom.dto.requests.BrandRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.BrandResponseDTO;
 import br.com.ecommerce.ecom.entity.Brand;
+import br.com.ecommerce.ecom.exception.BrandNotFoundException;
 import br.com.ecommerce.ecom.mappers.BrandMapper;
 import br.com.ecommerce.ecom.repository.BrandRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +35,12 @@ public class BrandService {
     }
 
     public BrandResponseDTO getBrandById(Long id) {
-        Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
+        Brand brand = findByIdOrThrow(id);
         return brandMapper.toResponseDTO(brand);
     }
 
     public BrandResponseDTO updateBrand(Long id, BrandRequestDTO dto) {
-        Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
+        Brand brand = findByIdOrThrow(id);
 
         brandMapper.updateEntityFromDTO(dto, brand);
         Brand updatedBrand = brandRepository.save(brand);
@@ -51,8 +49,12 @@ public class BrandService {
     }
 
     public void deleteBrand(Long id) {
-        Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
+        Brand brand = findByIdOrThrow(id);
         brandRepository.delete(brand);
+    }
+
+    private Brand findByIdOrThrow(Long id) {
+        return brandRepository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
     }
 }

@@ -1,7 +1,7 @@
 package br.com.ecommerce.ecom.service.keycloack;
 
-import br.com.ecommerce.ecom.config.exception.BusinessException;
-import br.com.ecommerce.ecom.config.exception.keycloack.KeycloakAuthenticationException;
+import br.com.ecommerce.ecom.exception.BusinessException;
+import br.com.ecommerce.ecom.exception.keycloack.KeycloakAuthenticationException;
 import br.com.ecommerce.ecom.config.keycloack.KeycloakProperties;
 import br.com.ecommerce.ecom.dto.requests.LoginRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.KeycloakTokenResponse;

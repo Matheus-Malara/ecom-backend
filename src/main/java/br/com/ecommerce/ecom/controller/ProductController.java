@@ -5,9 +5,17 @@ import br.com.ecommerce.ecom.dto.responses.ApiResponse;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
 import br.com.ecommerce.ecom.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -20,7 +28,7 @@ public class ProductController {
     private final ResponseFactory responseFactory;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProductResponseDTO>> createProduct(@RequestBody ProductRequestDTO dto) {
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> createProduct(@RequestBody @Valid ProductRequestDTO dto) {
         ProductResponseDTO response = productService.createProduct(dto);
         return responseFactory.createdResponse(response, "Product created successfully", "/api/products");
     }
@@ -39,7 +47,7 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponseDTO>> updateProduct(@PathVariable Long id,
-                                                                         @RequestBody ProductRequestDTO dto) {
+                                                                         @RequestBody @Valid ProductRequestDTO dto) {
         ProductResponseDTO response = productService.updateProduct(id, dto);
         return responseFactory.okResponse(response, "Product updated successfully", "/api/products/" + id);
     }

@@ -5,9 +5,17 @@ import br.com.ecommerce.ecom.dto.responses.ApiResponse;
 import br.com.ecommerce.ecom.dto.responses.BrandResponseDTO;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
 import br.com.ecommerce.ecom.service.BrandService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -20,7 +28,7 @@ public class BrandController {
     private final ResponseFactory responseFactory;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<BrandResponseDTO>> createBrand(@RequestBody BrandRequestDTO dto) {
+    public ResponseEntity<ApiResponse<BrandResponseDTO>> createBrand(@RequestBody @Valid BrandRequestDTO dto) {
         BrandResponseDTO response = brandService.createBrand(dto);
         return responseFactory.createdResponse(response, "Brand created successfully", "/api/brands");
     }
@@ -39,7 +47,7 @@ public class BrandController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BrandResponseDTO>> updateBrand(@PathVariable Long id,
-                                                                     @RequestBody BrandRequestDTO dto) {
+                                                                     @RequestBody @Valid BrandRequestDTO dto) {
         BrandResponseDTO response = brandService.updateBrand(id, dto);
         return responseFactory.okResponse(response, "Brand updated successfully", "/api/brands/" + id);
     }

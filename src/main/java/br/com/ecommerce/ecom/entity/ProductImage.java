@@ -34,5 +34,6 @@ public class ProductImage {
     private Product product;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer displayOrder = 0;
 }

@@ -5,9 +5,17 @@ import br.com.ecommerce.ecom.dto.responses.ApiResponse;
 import br.com.ecommerce.ecom.dto.responses.CategoryResponseDTO;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
 import br.com.ecommerce.ecom.service.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -20,7 +28,7 @@ public class CategoryController {
     private final ResponseFactory responseFactory;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(@RequestBody CategoryRequestDTO dto) {
+    public ResponseEntity<ApiResponse<CategoryResponseDTO>> createCategory(@RequestBody @Valid CategoryRequestDTO dto) {
         CategoryResponseDTO response = categoryService.createCategory(dto);
         return responseFactory.createdResponse(response, "Category created successfully", "/api/categories");
     }
@@ -39,9 +47,10 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoryResponseDTO>> updateCategory(@PathVariable Long id,
-                                                                           @RequestBody CategoryRequestDTO dto) {
+                                                                           @RequestBody @Valid CategoryRequestDTO dto) {
         CategoryResponseDTO response = categoryService.updateCategory(id, dto);
-        return responseFactory.okResponse(response, "Category updated successfully", "/api/categories");
+        return responseFactory.okResponse(response, "Category updated successfully", "/api/categories/" + id);
+
     }
 
     @DeleteMapping("/{id}")
