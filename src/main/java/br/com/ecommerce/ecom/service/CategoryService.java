@@ -1,5 +1,6 @@
 package br.com.ecommerce.ecom.service;
 
+import br.com.ecommerce.ecom.dto.filters.CategoryFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.CategoryRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.CategoryResponseDTO;
 import br.com.ecommerce.ecom.entity.Category;
@@ -7,13 +8,14 @@ import br.com.ecommerce.ecom.exception.CategoryNotFoundException;
 import br.com.ecommerce.ecom.exception.DuplicateCategoryNameException;
 import br.com.ecommerce.ecom.mappers.CategoryMapper;
 import br.com.ecommerce.ecom.repository.CategoryRepository;
+import br.com.ecommerce.ecom.specification.CategorySpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,12 +37,13 @@ public class CategoryService {
         return categoryMapper.toResponseDTO(savedCategory);
     }
 
-    public List<CategoryResponseDTO> getAllCategories() {
-        log.debug("Fetching all categories");
-        return categoryRepository.findAll()
-                .stream()
-                .map(categoryMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public Page<CategoryResponseDTO> getCategoryFiltered(CategoryFilterDTO filter, Pageable pageable) {
+        Specification<Category> spec = CategorySpecification.withFilters(filter);
+
+        log.debug("Fetching categories with filters: name='{}', active={}", filter.getName(), filter.getActive());
+
+        return categoryRepository.findAll(spec, pageable)
+                .map(categoryMapper::toResponseDTO);
     }
 
     public CategoryResponseDTO getCategoryById(Long id) {
