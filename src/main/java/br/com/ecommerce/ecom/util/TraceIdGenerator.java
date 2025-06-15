@@ -9,7 +9,7 @@ import java.util.UUID;
 @Slf4j
 public class TraceIdGenerator {
 
-    private static final ThreadLocal<String> TRACE_ID = new ThreadLocal<>();
+    private static final InheritableThreadLocal<String> TRACE_ID = new InheritableThreadLocal<>();
 
     public void generateNewTraceId() {
         String traceId = UUID.randomUUID().toString();
@@ -18,10 +18,12 @@ public class TraceIdGenerator {
     }
 
     public String getTraceId() {
-        return TRACE_ID.get() != null ? TRACE_ID.get() : "UNKNOWN_TRACE_ID";
+        String traceId = TRACE_ID.get();
+        return traceId != null ? traceId : "UNKNOWN_TRACE_ID";
     }
 
     public void clear() {
         TRACE_ID.remove();
+        log.debug("Cleared traceId from thread");
     }
 }
