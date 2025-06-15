@@ -1,5 +1,6 @@
 package br.com.ecommerce.ecom.controller;
 
+import br.com.ecommerce.ecom.dto.filters.CategoryFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.CategoryRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.ApiResponse;
 import br.com.ecommerce.ecom.dto.responses.CategoryResponseDTO;
@@ -7,9 +8,13 @@ import br.com.ecommerce.ecom.factory.ResponseFactory;
 import br.com.ecommerce.ecom.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -37,9 +40,11 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> getAllCategories() {
-        List<CategoryResponseDTO> categories = categoryService.getAllCategories();
-        return responseFactory.okResponse(categories, "Categories retrieved successfully", CATEGORY_BASE_PATH);
+    public ResponseEntity<ApiResponse<Page<CategoryResponseDTO>>> getCategoryFiltered(
+            @Valid @ModelAttribute CategoryFilterDTO filter,
+            @PageableDefault(size = 5, sort = "name") Pageable pageable) {
+        Page<CategoryResponseDTO> page = categoryService.getCategoryFiltered(filter, pageable);
+        return responseFactory.okResponse(page, "All categories fetched", CATEGORY_BASE_PATH);
     }
 
     @GetMapping("/{id}")
