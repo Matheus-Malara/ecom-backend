@@ -42,7 +42,7 @@ public class CategoryController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<CategoryResponseDTO>>> getCategoryFiltered(
             @Valid @ModelAttribute CategoryFilterDTO filter,
-            @PageableDefault(size = 5, sort = "name") Pageable pageable) {
+            @PageableDefault(size = 5) Pageable pageable) {
         Page<CategoryResponseDTO> page = categoryService.getCategoryFiltered(filter, pageable);
         return responseFactory.okResponse(page, "All categories fetched", CATEGORY_BASE_PATH);
     }
