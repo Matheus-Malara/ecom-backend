@@ -1,5 +1,6 @@
 package br.com.ecommerce.ecom.service;
 
+import br.com.ecommerce.ecom.dto.filters.BrandFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.BrandRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.BrandResponseDTO;
 import br.com.ecommerce.ecom.entity.Brand;
@@ -7,13 +8,14 @@ import br.com.ecommerce.ecom.exception.BrandNotFoundException;
 import br.com.ecommerce.ecom.exception.DuplicateBrandNameException;
 import br.com.ecommerce.ecom.mappers.BrandMapper;
 import br.com.ecommerce.ecom.repository.BrandRepository;
+import br.com.ecommerce.ecom.specification.BrandSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,12 +37,13 @@ public class BrandService {
         return brandMapper.toResponseDTO(savedBrand);
     }
 
-    public List<BrandResponseDTO> getAllBrands() {
-        log.debug("Fetching all brands");
-        return brandRepository.findAll()
-                .stream()
-                .map(brandMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public Page<BrandResponseDTO> getBrandFiltered(BrandFilterDTO filter, Pageable pageable) {
+        Specification<Brand> spec = BrandSpecification.withFilters(filter);
+
+        log.debug("Fetching brands with filters: name='{}', active={}", filter.getName(), filter.getActive());
+
+        return brandRepository.findAll(spec, pageable)
+                .map(brandMapper::toResponseDTO);
     }
 
     public BrandResponseDTO getBrandById(Long id) {
