@@ -1,5 +1,6 @@
 package br.com.ecommerce.ecom.controller;
 
+import br.com.ecommerce.ecom.dto.filters.ProductFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.ProductRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.ApiResponse;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
@@ -7,9 +8,13 @@ import br.com.ecommerce.ecom.factory.ResponseFactory;
 import br.com.ecommerce.ecom.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -37,9 +40,12 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> getAllProducts() {
-        List<ProductResponseDTO> products = productService.getAllProducts();
-        return responseFactory.okResponse(products, "Products retrieved successfully", PRODUCT_BASE_PATH);
+    public ResponseEntity<ApiResponse<Page<ProductResponseDTO>>> getProductFiltered(
+            @Valid @ModelAttribute ProductFilterDTO filter,
+            @PageableDefault(size = 5) Pageable pageable) {
+
+        Page<ProductResponseDTO> response = productService.getProductFiltered(filter, pageable);
+        return responseFactory.okResponse(response, "All products fetched", PRODUCT_BASE_PATH);
     }
 
     @GetMapping("/{id}")

@@ -1,5 +1,6 @@
 package br.com.ecommerce.ecom.service;
 
+import br.com.ecommerce.ecom.dto.filters.ProductFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.ProductRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
 import br.com.ecommerce.ecom.entity.Brand;
@@ -13,8 +14,12 @@ import br.com.ecommerce.ecom.mappers.ProductMapper;
 import br.com.ecommerce.ecom.repository.BrandRepository;
 import br.com.ecommerce.ecom.repository.CategoryRepository;
 import br.com.ecommerce.ecom.repository.ProductRepository;
+import br.com.ecommerce.ecom.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,13 +63,15 @@ public class ProductService {
         return productMapper.toResponseDTO(savedProduct);
     }
 
-    public List<ProductResponseDTO> getAllProducts() {
-        log.debug("Fetching all products");
-        return productRepository.findAll()
-                .stream()
-                .map(productMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public Page<ProductResponseDTO> getProductFiltered(ProductFilterDTO filter, Pageable pageable) {
+        Specification<Product> spec = ProductSpecification.withFilters(filter);
+
+        log.debug("Fetching products with filters: {}", filter);
+
+        return productRepository.findAll(spec, pageable)
+                .map(productMapper::toResponseDTO);
     }
+
 
     public ProductResponseDTO getProductById(Long id) {
         log.debug("Fetching product by ID: {}", id);
