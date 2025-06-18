@@ -33,4 +33,9 @@ public interface KeycloakUserClient {
 
     @GetMapping("/roles/{roleName}")
     RoleRepresentation getRoleByName(@PathVariable("roleName") String roleName, @RequestHeader("Authorization") String authorization);
+
+    @PutMapping("/users/{id}")
+    void updateUserEnabledStatus(@PathVariable("id") String userId,
+                                 @RequestBody UserRepresentation user,
+                                 @RequestHeader("Authorization") String authorization);
 }

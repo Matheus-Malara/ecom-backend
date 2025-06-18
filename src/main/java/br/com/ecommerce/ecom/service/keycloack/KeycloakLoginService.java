@@ -1,12 +1,15 @@
 package br.com.ecommerce.ecom.service.keycloack;
 
+import br.com.ecommerce.ecom.entity.User;
 import br.com.ecommerce.ecom.exception.BusinessException;
+import br.com.ecommerce.ecom.exception.UserInactiveException;
 import br.com.ecommerce.ecom.exception.keycloack.KeycloakAuthenticationException;
 import br.com.ecommerce.ecom.config.keycloack.KeycloakProperties;
 import br.com.ecommerce.ecom.dto.requests.LoginRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.KeycloakTokenResponse;
 import br.com.ecommerce.ecom.dto.responses.LoginResponseDTO;
 import br.com.ecommerce.ecom.enums.ErrorCode;
+import br.com.ecommerce.ecom.repository.UserRepository;
 import br.com.ecommerce.ecom.util.TraceIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +25,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -35,10 +40,13 @@ public class KeycloakLoginService {
     private static final String PASSWORD_PARAM = "password";
     private static final String REALM_PATH = "/realms/";
 
+    private final UserRepository userRepository;
     private final KeycloakProperties keycloakProperties;
     private final RestTemplate restTemplate;
 
     public LoginResponseDTO loginUser(LoginRequestDTO request) {
+        checkUserActive(request);
+
         HttpEntity<MultiValueMap<String, String>> requestEntity = createRequestEntity(request);
         String tokenUrl = buildTokenUrl();
 
@@ -50,6 +58,14 @@ public class KeycloakLoginService {
         } catch (Exception ex) {
             handleLoginError(request.getEmail(), ex);
             throw new KeycloakAuthenticationException("Failed to login via Keycloak: " + ex.getMessage());
+        }
+    }
+
+    private void checkUserActive(LoginRequestDTO request) {
+        Optional<User> user = userRepository.findByEmail(request.getEmail());
+        if (user.isPresent() && !user.get().isActive()) {
+            log.warn("[{}] Login attempt for inactive user {}", TraceIdGenerator.getTraceId(), request.getEmail());
+            throw new UserInactiveException();
         }
     }
 
