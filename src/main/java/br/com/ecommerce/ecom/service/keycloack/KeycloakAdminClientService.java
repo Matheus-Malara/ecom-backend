@@ -1,31 +1,23 @@
 package br.com.ecommerce.ecom.service.keycloack;
 
 import br.com.ecommerce.ecom.client.feign.keycloack.KeycloakUserClient;
-import br.com.ecommerce.ecom.exception.BusinessException;
-import br.com.ecommerce.ecom.exception.EmailAlreadyInUseException;
-import br.com.ecommerce.ecom.exception.keycloack.KeycloakAuthenticationException;
-import br.com.ecommerce.ecom.exception.keycloack.KeycloakUserNotFoundException;
-import br.com.ecommerce.ecom.config.keycloack.KeycloakProperties;
 import br.com.ecommerce.ecom.dto.requests.RegisterUserRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.KeycloakTokenResponse;
+import br.com.ecommerce.ecom.entity.User;
 import br.com.ecommerce.ecom.enums.ErrorCode;
+import br.com.ecommerce.ecom.exception.BusinessException;
+import br.com.ecommerce.ecom.exception.EmailAlreadyInUseException;
+import br.com.ecommerce.ecom.exception.keycloack.KeycloakUserNotFoundException;
 import br.com.ecommerce.ecom.model.keycloack.CredentialRepresentation;
 import br.com.ecommerce.ecom.model.keycloack.RoleRepresentation;
 import br.com.ecommerce.ecom.model.keycloack.UserRepresentation;
+import br.com.ecommerce.ecom.repository.UserRepository;
 import br.com.ecommerce.ecom.util.TraceIdGenerator;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -33,24 +25,25 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class KeycloakAdminClientService {
+
     private static final String PASSWORD_TYPE = "password";
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final String TOKEN_ENDPOINT = "/protocol/openid-connect/token";
-    private static final String GRANT_TYPE = "client_credentials";
 
+    private final UserRepository userRepository;
     private final KeycloakUserClient keycloakUserClient;
-    private final KeycloakProperties keycloakProperties;
-    private final RestTemplate restTemplate;
+    private final KeycloakTokenService keycloakTokenService;
 
     public void createUser(RegisterUserRequestDTO request, String roleName) {
         log.info("[{}] Starting user registration: {}", TraceIdGenerator.getTraceId(), request.getEmail());
 
-        String accessToken = createAuthorizationHeader(getAdminToken());
+        String accessToken = createAuthorizationHeader(keycloakTokenService.getAdminToken());
         UserRepresentation user = createUserRepresentation(request);
 
         String userId = createKeycloakUser(user, accessToken);
         setUserPassword(userId, request.getPassword(), accessToken);
         assignUserRole(userId, roleName, accessToken);
+
+        saveUser(userId, request);
 
         log.info("[{}] User registration completed: {}", TraceIdGenerator.getTraceId(), request.getEmail());
     }
@@ -70,7 +63,6 @@ public class KeycloakAdminClientService {
         try {
             keycloakUserClient.createUser(user, accessToken);
             log.info("[{}] User {} created in Keycloak", TraceIdGenerator.getTraceId(), user.getEmail());
-
             return findCreatedUserId(user.getEmail(), accessToken);
         } catch (FeignException.Conflict ex) {
             throw new EmailAlreadyInUseException();
@@ -115,44 +107,15 @@ public class KeycloakAdminClientService {
         return BEARER_PREFIX + tokenResponse.getAccessToken();
     }
 
-    private KeycloakTokenResponse getAdminToken() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    private void saveUser(String userId, RegisterUserRequestDTO request) {
+        User localUser = User.builder()
+                .keycloakUserId(userId)
+                .email(request.getEmail())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .active(true)
+                .build();
 
-        MultiValueMap<String, String> form = createTokenRequestForm();
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
-
-        return executeTokenRequest(entity);
-    }
-
-    private MultiValueMap<String, String> createTokenRequestForm() {
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("grant_type", GRANT_TYPE);
-        form.add("client_id", keycloakProperties.getClientId());
-        form.add("client_secret", keycloakProperties.getClientSecret());
-        return form;
-    }
-
-    private KeycloakTokenResponse executeTokenRequest(HttpEntity<MultiValueMap<String, String>> entity) {
-        String tokenUrl = keycloakProperties.getUrl() + "/realms/" + keycloakProperties.getRealm() + TOKEN_ENDPOINT;
-        try {
-            ResponseEntity<KeycloakTokenResponse> response = restTemplate.exchange(
-                    tokenUrl,
-                    HttpMethod.POST,
-                    entity,
-                    KeycloakTokenResponse.class
-            );
-
-            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                log.error("[{}] Failed to get admin token from Keycloak: {}", TraceIdGenerator.getTraceId(), response.getStatusCode());
-                throw new KeycloakAuthenticationException("Failed to get admin token from Keycloak: " + response.getStatusCode());
-            }
-
-            log.info("[{}] Successfully obtained admin token from Keycloak", TraceIdGenerator.getTraceId());
-            return response.getBody();
-        } catch (Exception ex) {
-            log.error("[{}] Exception while getting admin token from Keycloak: {}", TraceIdGenerator.getTraceId(), ex.getMessage(), ex);
-            throw new KeycloakAuthenticationException("Exception while getting admin token from Keycloak: " + ex.getMessage());
-        }
+        userRepository.save(localUser);
     }
 }
