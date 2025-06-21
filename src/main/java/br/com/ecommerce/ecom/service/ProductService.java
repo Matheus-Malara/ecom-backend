@@ -7,12 +7,8 @@ import br.com.ecommerce.ecom.entity.Brand;
 import br.com.ecommerce.ecom.entity.Category;
 import br.com.ecommerce.ecom.entity.Product;
 import br.com.ecommerce.ecom.entity.ProductImage;
-import br.com.ecommerce.ecom.exception.BrandNotFoundException;
-import br.com.ecommerce.ecom.exception.CategoryNotFoundException;
 import br.com.ecommerce.ecom.exception.ProductNotFoundException;
 import br.com.ecommerce.ecom.mappers.ProductMapper;
-import br.com.ecommerce.ecom.repository.BrandRepository;
-import br.com.ecommerce.ecom.repository.CategoryRepository;
 import br.com.ecommerce.ecom.repository.ProductRepository;
 import br.com.ecommerce.ecom.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
@@ -33,15 +29,15 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
-    private final BrandRepository brandRepository;
     private final ProductMapper productMapper;
+    private final CategoryService categoryService;
+    private final BrandService brandService;
 
     public ProductResponseDTO createProduct(ProductRequestDTO dto) {
         log.info("Creating product with name: {}", dto.getName());
 
-        Category category = findCategoryByIdOrThrow(dto.getCategoryId());
-        Brand brand = findBrandByIdOrThrow(dto.getBrandId());
+        Category category = categoryService.findExistingCategory(dto.getCategoryId());
+        Brand brand = brandService.getExistingBrand(dto.getBrandId());
 
         Product product = Product.builder()
                 .name(dto.getName())
@@ -75,16 +71,16 @@ public class ProductService {
 
     public ProductResponseDTO getProductById(Long id) {
         log.debug("Fetching product by ID: {}", id);
-        Product product = findProductByIdOrThrow(id);
+        Product product = getExistingProduct(id);
         return productMapper.toResponseDTO(product);
     }
 
     public ProductResponseDTO updateProduct(Long id, ProductRequestDTO dto) {
         log.info("Updating product with ID: {}", id);
 
-        Product product = findProductByIdOrThrow(id);
-        Category category = findCategoryByIdOrThrow(dto.getCategoryId());
-        Brand brand = findBrandByIdOrThrow(dto.getBrandId());
+        Product product = getExistingProduct(id);
+        Category category = categoryService.findExistingCategory(dto.getCategoryId());
+        Brand brand = brandService.getExistingBrand(dto.getBrandId());
 
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
@@ -106,14 +102,14 @@ public class ProductService {
 
     public void deleteProduct(Long id) {
         log.info("Deleting product with ID: {}", id);
-        Product product = findProductByIdOrThrow(id);
+        Product product = getExistingProduct(id);
         productRepository.delete(product);
         log.info("Product with ID {} deleted successfully", id);
     }
 
     public void updateProductStatus(Long id, boolean active) {
         log.info("Updating status of product ID {} to: {}", id, active);
-        Product product = findProductByIdOrThrow(id);
+        Product product = getExistingProduct(id);
         product.setActive(active);
         productRepository.save(product);
         log.info("Product ID {} status updated to {}", id, active);
@@ -131,27 +127,11 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    private Product findProductByIdOrThrow(Long id) {
+    public Product getExistingProduct(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Product with ID {} not found", id);
                     return new ProductNotFoundException(id);
-                });
-    }
-
-    private Category findCategoryByIdOrThrow(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Category with ID {} not found (used in product)", id);
-                    return new CategoryNotFoundException(id);
-                });
-    }
-
-    private Brand findBrandByIdOrThrow(Long id) {
-        return brandRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Brand with ID {} not found (used in product)", id);
-                    return new BrandNotFoundException(id);
                 });
     }
 }

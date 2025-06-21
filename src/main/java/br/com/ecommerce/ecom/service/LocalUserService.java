@@ -36,6 +36,11 @@ public class LocalUserService {
         log.info("[{}] User {} status set to {}", TraceIdGenerator.getTraceId(), email, active);
     }
 
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+    }
+
     private void updateKeycloakUserEnabledStatus(String keycloakUserId, boolean enabled) {
         String accessToken = BEARER_PREFIX + keycloakTokenService.getAdminToken().getAccessToken();
 
