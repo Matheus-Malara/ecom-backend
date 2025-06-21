@@ -48,13 +48,13 @@ public class BrandService {
 
     public BrandResponseDTO getBrandById(Long id) {
         log.debug("Fetching brand by ID: {}", id);
-        Brand brand = findByIdOrThrow(id);
+        Brand brand = getExistingBrand(id);
         return brandMapper.toResponseDTO(brand);
     }
 
     public BrandResponseDTO updateBrand(Long id, BrandRequestDTO dto) {
         log.info("Updating brand with ID: {}", id);
-        Brand brand = findByIdOrThrow(id);
+        Brand brand = getExistingBrand(id);
 
         brandMapper.updateEntityFromDTO(dto, brand);
         Brand updatedBrand = brandRepository.save(brand);
@@ -65,14 +65,14 @@ public class BrandService {
 
     public void deleteBrand(Long id) {
         log.info("Deleting brand with ID: {}", id);
-        Brand brand = findByIdOrThrow(id);
+        Brand brand = getExistingBrand(id);
         brandRepository.delete(brand);
         log.info("Brand with ID {} deleted successfully", id);
     }
 
     public void updateBrandStatus(Long id, boolean active) {
         log.info("Updating status of brand ID {} to: {}", id, active);
-        Brand brand = findByIdOrThrow(id);
+        Brand brand = getExistingBrand(id);
         brand.setActive(active);
         brandRepository.save(brand);
         log.info("Brand ID {} status updated to {}", id, active);
@@ -80,7 +80,7 @@ public class BrandService {
 
     // ========= Helpers =========
 
-    private Brand findByIdOrThrow(Long id) {
+    public Brand getExistingBrand(Long id) {
         return brandRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Brand with ID {} not found", id);

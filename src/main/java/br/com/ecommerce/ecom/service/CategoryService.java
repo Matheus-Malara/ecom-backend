@@ -48,13 +48,13 @@ public class CategoryService {
 
     public CategoryResponseDTO getCategoryById(Long id) {
         log.debug("Fetching category by ID: {}", id);
-        Category category = findByIdOrThrow(id);
+        Category category = findExistingCategory(id);
         return categoryMapper.toResponseDTO(category);
     }
 
     public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO dto) {
         log.info("Updating category with ID: {}", id);
-        Category category = findByIdOrThrow(id);
+        Category category = findExistingCategory(id);
 
         categoryMapper.updateEntityFromDTO(dto, category);
         Category updatedCategory = categoryRepository.save(category);
@@ -65,14 +65,14 @@ public class CategoryService {
 
     public void deleteCategory(Long id) {
         log.info("Deleting category with ID: {}", id);
-        Category category = findByIdOrThrow(id);
+        Category category = findExistingCategory(id);
         categoryRepository.delete(category);
         log.info("Category with ID {} deleted successfully", id);
     }
 
     public void updateCategoryStatus(Long id, boolean active) {
         log.info("Updating status of category ID {} to: {}", id, active);
-        Category category = findByIdOrThrow(id);
+        Category category = findExistingCategory(id);
         category.setActive(active);
         categoryRepository.save(category);
         log.info("Category ID {} status updated to {}", id, active);
@@ -80,7 +80,8 @@ public class CategoryService {
 
     // ========= Helpers =========
 
-    private Category findByIdOrThrow(Long id) {
+
+    public Category findExistingCategory(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Category with ID {} not found", id);

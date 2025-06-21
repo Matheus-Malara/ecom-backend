@@ -29,7 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class BrandController {
 
-    public static final String BRAND_BASE_PATH = "/api/brands/";
+    public static final String BRAND_BASE_PATH = "/api/brands";
+
     private final BrandService brandService;
     private final ResponseFactory responseFactory;
 
@@ -40,38 +41,38 @@ public class BrandController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<BrandResponseDTO>>> getAllBrands(
+    public ResponseEntity<ApiResponse<Page<BrandResponseDTO>>> getBrandFiltered(
             @Valid @ModelAttribute BrandFilterDTO filter,
             @PageableDefault(size = 5) Pageable pageable) {
 
         Page<BrandResponseDTO> page = brandService.getBrandFiltered(filter, pageable);
-        return responseFactory.okResponse(page, "All brands fetched", "/api/brands");
+        return responseFactory.okResponse(page, "All brands fetched", BRAND_BASE_PATH);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<BrandResponseDTO>> getBrandById(@PathVariable Long id) {
         BrandResponseDTO brand = brandService.getBrandById(id);
-        return responseFactory.okResponse(brand, "Brand retrieved successfully", BRAND_BASE_PATH + id);
+        return responseFactory.okResponse(brand, "Brand retrieved successfully", BRAND_BASE_PATH + "/" + id);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BrandResponseDTO>> updateBrand(@PathVariable Long id,
                                                                      @RequestBody @Valid BrandRequestDTO dto) {
         BrandResponseDTO response = brandService.updateBrand(id, dto);
-        return responseFactory.okResponse(response, "Brand updated successfully", BRAND_BASE_PATH + id);
+        return responseFactory.okResponse(response, "Brand updated successfully", BRAND_BASE_PATH + "/" + id);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);
-        return responseFactory.noContentResponse("Brand deleted successfully", BRAND_BASE_PATH + id);
+        return responseFactory.noContentResponse("Brand deleted successfully", BRAND_BASE_PATH + "/" + id);
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Void>> updateBrandStatus(@PathVariable Long id,
                                                                @RequestParam boolean active) {
         brandService.updateBrandStatus(id, active);
-        return responseFactory.okResponse(null, "Brand status updated", BRAND_BASE_PATH + id);
+        return responseFactory.okResponse(null, "Brand status updated", BRAND_BASE_PATH + "/" + id + "/status");
     }
 
 }
