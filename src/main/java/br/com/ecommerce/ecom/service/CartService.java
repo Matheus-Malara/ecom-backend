@@ -6,6 +6,7 @@ import br.com.ecommerce.ecom.entity.Cart;
 import br.com.ecommerce.ecom.entity.CartItem;
 import br.com.ecommerce.ecom.entity.Product;
 import br.com.ecommerce.ecom.entity.User;
+import br.com.ecommerce.ecom.exception.ActiveCartNotFoundException;
 import br.com.ecommerce.ecom.exception.CartItemNotFoundException;
 import br.com.ecommerce.ecom.repository.CartItemRepository;
 import br.com.ecommerce.ecom.repository.CartRepository;
@@ -127,4 +128,16 @@ public class CartService {
     private void logCartAction(User user, String action) {
         log.info(LOG_USER_CART_ACTION, user.getEmail(), action);
     }
+
+    public Cart findActiveCartByUser(User user) {
+        return cartRepository.findByUserAndCheckedOutFalse(user)
+                .orElseThrow(() -> new ActiveCartNotFoundException(user.getEmail()));
+    }
+
+    @Transactional
+    public void setCheckoutCartToTrue(Cart cart) {
+        cart.setCheckedOut(true);
+        cartRepository.save(cart);
+    }
+
 }
