@@ -104,5 +104,3 @@ class ProductMapperTest {
         assertTrue(dto.getImageUrls().isEmpty());
     }
 }
-
-//asd
