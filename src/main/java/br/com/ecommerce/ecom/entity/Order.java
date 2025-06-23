@@ -47,10 +47,15 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
+        updatedAt = createdAt;
     }
 }
