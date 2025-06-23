@@ -12,9 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -32,5 +37,35 @@ public class OrderController {
         Order order = orderService.checkout(user);
         OrderResponseDTO dto = orderMapper.toResponseDTO(order);
         return responseFactory.createdResponse(dto, "Order created successfully", "/api/orders/" + order.getId());
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> cancelOrder(@PathVariable Long id,
+                                                                     @AuthenticationPrincipal Jwt jwt) {
+        User user = userService.getUserByEmail(jwt.getClaim("email"));
+        Order order = orderService.cancelOrderIfAllowed(id, user);
+        OrderResponseDTO response = orderMapper.toResponseDTO(order);
+        return responseFactory.okResponse(response, "Order cancelled", "/api/orders/" + id);
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<OrderResponseDTO>>> getUserOrders(@AuthenticationPrincipal Jwt jwt) {
+        User user = userService.getUserByEmail(jwt.getClaim("email"));
+        List<Order> orders = orderService.getOrdersByUser(user);
+        List<OrderResponseDTO> response = orders.stream()
+                .map(orderMapper::toResponseDTO)
+                .toList();
+
+        return responseFactory.okResponse(response, "Orders fetched successfully", "/api/orders");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> getOrderById(@PathVariable Long id,
+                                                                      @AuthenticationPrincipal Jwt jwt) {
+        User user = userService.getUserByEmail(jwt.getClaim("email"));
+        Order order = orderService.getOrderByIdAndUser(id, user);
+        OrderResponseDTO response = orderMapper.toResponseDTO(order);
+
+        return responseFactory.okResponse(response, "Order fetched successfully", "/api/orders/" + id);
     }
 }
