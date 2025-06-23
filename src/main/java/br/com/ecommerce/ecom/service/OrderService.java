@@ -1,5 +1,6 @@
 package br.com.ecommerce.ecom.service;
 
+import br.com.ecommerce.ecom.dto.filters.OrderFilterDTO;
 import br.com.ecommerce.ecom.entity.Cart;
 import br.com.ecommerce.ecom.entity.CartItem;
 import br.com.ecommerce.ecom.entity.Order;
@@ -11,9 +12,13 @@ import br.com.ecommerce.ecom.exception.EmptyCartException;
 import br.com.ecommerce.ecom.exception.InvalidOrderStatusException;
 import br.com.ecommerce.ecom.exception.OrderNotFoundException;
 import br.com.ecommerce.ecom.repository.OrderRepository;
+import br.com.ecommerce.ecom.specification.OrderSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -41,9 +46,6 @@ public class OrderService {
             OrderStatus.CANCELLED, Set.of()
     );
 
-    /**
-     * Checkout: Converts the user's active cart into an order.
-     */
     @Transactional
     public Order checkout(User user) {
         Cart cart = cartService.findActiveCartByUser(user);
@@ -92,9 +94,6 @@ public class OrderService {
         return order;
     }
 
-    /**
-     * Admin or system-level update of order status (no user check).
-     */
     @Transactional
     public Order updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = getOrderById(orderId);
@@ -108,39 +107,26 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    /**
-     * List all orders of a specific user.
-     */
-    public List<Order> getOrdersByUser(User user) {
-        return orderRepository.findByUserOrderByCreatedAtDesc(user);
+    public Page<Order> getOrdersByUserFiltered(User user, Pageable pageable) {
+        return orderRepository.findByUser(user, pageable);
     }
 
-    /**
-     * Get a single order by ID, verifying ownership.
-     */
+
     public Order getOrderByIdAndUser(Long orderId, User user) {
         return orderRepository.findByIdAndUser(orderId, user)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
     }
 
-    /**
-     * Admin fetch of any order.
-     */
     public Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
     }
 
-    /**
-     * Admin fetch of all orders.
-     */
-    public List<Order> getAllOrders() {
-        return orderRepository.findAllByOrderByCreatedAtDesc();
+    public Page<Order> getOrdersFiltered(OrderFilterDTO filter, Pageable pageable) {
+        Specification<Order> spec = OrderSpecification.withFilters(filter);
+        return orderRepository.findAll(spec, pageable);
     }
 
-    /**
-     * Validates if a status change is allowed.
-     */
     private void validateTransition(OrderStatus current, OrderStatus target) {
         Set<OrderStatus> allowed = VALID_TRANSITIONS.getOrDefault(current, Set.of());
         if (!allowed.contains(target)) {
