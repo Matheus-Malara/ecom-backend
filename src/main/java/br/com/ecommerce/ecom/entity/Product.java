@@ -68,7 +68,7 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
+    @Builder.Default
     private List<ProductImage> images = new ArrayList<>();
 
     @Column(nullable = false)

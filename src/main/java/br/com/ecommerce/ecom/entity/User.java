@@ -48,6 +48,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean active = true;
 
     @PrePersist
