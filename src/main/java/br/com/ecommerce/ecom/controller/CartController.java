@@ -3,14 +3,16 @@ package br.com.ecommerce.ecom.controller;
 import br.com.ecommerce.ecom.dto.requests.AddToCartRequestDTO;
 import br.com.ecommerce.ecom.dto.requests.RemoveFromCartRequestDTO;
 import br.com.ecommerce.ecom.dto.requests.UpdateCartItemRequestDTO;
-import br.com.ecommerce.ecom.dto.responses.ApiResponse;
 import br.com.ecommerce.ecom.dto.responses.CartResponseDTO;
+import br.com.ecommerce.ecom.dto.responses.StandardResponse;
 import br.com.ecommerce.ecom.entity.Cart;
 import br.com.ecommerce.ecom.entity.User;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
 import br.com.ecommerce.ecom.mappers.CartMapper;
 import br.com.ecommerce.ecom.service.CartService;
 import br.com.ecommerce.ecom.service.LocalUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,29 +42,35 @@ public class CartController {
     private final ResponseFactory responseFactory;
     private final CartMapper cartMapper;
 
+    @Operation(summary = "Add item to cart", description = "Adds a product to the authenticated user's cart.")
     @PostMapping("/add")
-    public ResponseEntity<ApiResponse<CartResponseDTO>> addToCart(@AuthenticationPrincipal Jwt jwt,
-                                                                  @RequestBody @Valid AddToCartRequestDTO dto) {
+    public ResponseEntity<StandardResponse<CartResponseDTO>> addToCart(
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+            @RequestBody @Valid AddToCartRequestDTO dto) {
+
         User user = userService.getUserByEmail(jwt.getClaim("email"));
         Cart cart = cartService.addItemToCart(dto, user);
         CartResponseDTO response = cartMapper.toResponse(cart);
-
         return responseFactory.okResponse(response, "Item added to cart", CART_BASE_PATH + "/add");
     }
 
-
+    @Operation(summary = "Update cart item quantity", description = "Updates the quantity of a product in the user's cart.")
     @PutMapping("/update")
-    public ResponseEntity<ApiResponse<CartResponseDTO>> updateQuantity(@AuthenticationPrincipal Jwt jwt,
-                                                                       @RequestBody @Valid UpdateCartItemRequestDTO dto) {
+    public ResponseEntity<StandardResponse<CartResponseDTO>> updateQuantity(
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+            @RequestBody @Valid UpdateCartItemRequestDTO dto) {
+
         User user = userService.getUserByEmail(jwt.getClaim("email"));
         Cart cart = cartService.updateItemQuantity(dto, user);
         CartResponseDTO response = cartMapper.toResponse(cart);
-
         return responseFactory.okResponse(response, "Item quantity updated", CART_BASE_PATH + "/update");
     }
 
+    @Operation(summary = "Get current cart", description = "Retrieves the current cart of the authenticated user.")
     @GetMapping
-    public ResponseEntity<ApiResponse<CartResponseDTO>> getCart(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<StandardResponse<CartResponseDTO>> getCart(
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+
         User user = userService.getUserByEmail(jwt.getClaim("email"));
         Optional<Cart> cartOpt = cartService.findCurrentCart(user);
 
@@ -74,14 +82,15 @@ public class CartController {
         return responseFactory.okResponse(response, "Cart fetched successfully", CART_BASE_PATH);
     }
 
-
+    @Operation(summary = "Remove item from cart", description = "Removes a product from the user's cart.")
     @DeleteMapping("/remove")
-    public ResponseEntity<ApiResponse<CartResponseDTO>> removeFromCart(@AuthenticationPrincipal Jwt jwt,
-                                                            @RequestBody @Valid RemoveFromCartRequestDTO dto) {
+    public ResponseEntity<StandardResponse<CartResponseDTO>> removeFromCart(
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+            @RequestBody @Valid RemoveFromCartRequestDTO dto) {
+
         User user = userService.getUserByEmail(jwt.getClaim("email"));
         Cart cart = cartService.removeItem(user, dto.getProductId());
         CartResponseDTO response = cartMapper.toResponse(cart);
-
         return responseFactory.okResponse(response, "Item removed from cart", CART_BASE_PATH + "/remove");
     }
 }
