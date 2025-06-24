@@ -44,9 +44,10 @@ public class Cart {
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
+    @Builder.Default
     private List<CartItem> items = new ArrayList<>();
 
+    @Builder.Default
     private boolean checkedOut = false;
 
     private LocalDateTime createdAt;
