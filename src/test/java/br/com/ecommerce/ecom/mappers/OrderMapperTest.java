@@ -38,14 +38,14 @@ class OrderMapperTest {
                 .id(10L)
                 .product(product)
                 .quantity(3)
-                .unitPrice(new BigDecimal("89.90"))
+                .pricePerUnit(new BigDecimal("89.90"))
                 .build();
 
         OrderItemDTO dto = orderMapper.toItemDTO(item);
 
         assertEquals("Creatine", dto.getProductName());
         assertEquals(3, dto.getQuantity());
-        assertEquals(new BigDecimal("89.90"), dto.getUnitPrice());
+        assertEquals(new BigDecimal("89.90"), dto.getPricePerUnit());
     }
 
     @Test
@@ -59,7 +59,7 @@ class OrderMapperTest {
         OrderItem item = OrderItem.builder()
                 .product(product)
                 .quantity(2)
-                .unitPrice(new BigDecimal("129.90"))
+                .pricePerUnit(new BigDecimal("129.90"))
                 .build();
 
         List<OrderItemDTO> dtoList = orderMapper.toItemDTOList(List.of(item));
@@ -69,7 +69,7 @@ class OrderMapperTest {
         OrderItemDTO dto = dtoList.getFirst();
         assertEquals("Whey Protein", dto.getProductName());
         assertEquals(2, dto.getQuantity());
-        assertEquals(new BigDecimal("129.90"), dto.getUnitPrice());
+        assertEquals(new BigDecimal("129.90"), dto.getPricePerUnit());
     }
 
     @Test
@@ -83,7 +83,7 @@ class OrderMapperTest {
         OrderItem item = OrderItem.builder()
                 .product(product)
                 .quantity(1)
-                .unitPrice(new BigDecimal("59.90"))
+                .pricePerUnit(new BigDecimal("59.90"))
                 .build();
 
         Order order = Order.builder()
@@ -107,6 +107,6 @@ class OrderMapperTest {
         OrderItemDTO itemDTO = dto.getItems().getFirst();
         assertEquals("BCAA", itemDTO.getProductName());
         assertEquals(1, itemDTO.getQuantity());
-        assertEquals(new BigDecimal("59.90"), itemDTO.getUnitPrice());
+        assertEquals(new BigDecimal("59.90"), itemDTO.getPricePerUnit());
     }
 }

@@ -65,7 +65,7 @@ public class OrderService {
             OrderItem orderItem = OrderItem.builder()
                     .product(product)
                     .quantity(quantity)
-                    .unitPrice(unitPrice)
+                    .pricePerUnit(unitPrice)
                     .build();
 
             total = total.add(unitPrice.multiply(BigDecimal.valueOf(quantity)));

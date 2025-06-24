@@ -1,7 +1,7 @@
 package br.com.ecommerce.ecom.exception;
 
 import br.com.ecommerce.ecom.dto.responses.ApiError;
-import br.com.ecommerce.ecom.dto.responses.ApiResponse;
+import br.com.ecommerce.ecom.dto.responses.StandardResponse;
 import br.com.ecommerce.ecom.enums.ErrorCode;
 import br.com.ecommerce.ecom.util.TraceIdGenerator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<List<ApiError>>> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<List<ApiError>>> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.warn("[{}] Validation error on path {}: {} field errors", traceId, request.getRequestURI(), ex.getBindingResult().getFieldErrors().size());
 
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
                         .build())
                 .toList();
 
-        ApiResponse<List<ApiError>> response = ApiResponse.<List<ApiError>>builder()
+        StandardResponse<List<ApiError>> response = StandardResponse.<List<ApiError>>builder()
                 .timestamp(Instant.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message("Validation failed")
@@ -48,39 +48,39 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.warn("[{}] Method not supported: {} on {}", traceId, ex.getMethod(), request.getRequestURI());
         return buildResponse(HttpStatus.METHOD_NOT_ALLOWED, "HTTP method not allowed", ErrorCode.INVALID_REQUEST, request, traceId);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMalformedJson(HttpMessageNotReadableException ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<Void>> handleMalformedJson(HttpMessageNotReadableException ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.warn("[{}] Malformed JSON request: {}", traceId, ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, "Malformed request body", ErrorCode.INVALID_REQUEST, request, traceId);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<Void>> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.warn("[{}] Access denied on path {}: {}", traceId, request.getRequestURI(), ex.getMessage());
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied", ErrorCode.ACCESS_DENIED, request, traceId);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<Void>> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.warn("[{}] Resource not found: {}", traceId, ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ErrorCode.RESOURCE_NOT_FOUND, request, traceId);
     }
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<Void>> handleBusinessException(BusinessException ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.warn("[{}] BusinessException: status={} code={} message='{}'", traceId, ex.getStatus(), ex.getErrorCode(), ex.getMessage());
 
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
+        StandardResponse<Void> response = StandardResponse.<Void>builder()
                 .timestamp(Instant.now())
                 .status(ex.getStatus().value())
                 .message(ex.getMessage())
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(feign.FeignException.class)
-    public ResponseEntity<ApiResponse<Void>> handleFeignException(feign.FeignException ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<Void>> handleFeignException(feign.FeignException ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.warn("[{}] FeignException: status={} message={}", traceId, ex.status(), ex.getMessage());
 
@@ -107,14 +107,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<StandardResponse<Void>> handleGenericException(Exception ex, HttpServletRequest request) {
         String traceId = TraceIdGenerator.getTraceId();
         log.error("[{}] Unhandled exception on path {}: {}", traceId, request.getRequestURI(), ex.getMessage(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred: " + ex.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR, request, traceId);
     }
 
-    private ResponseEntity<ApiResponse<Void>> buildResponse(HttpStatus status, String message, ErrorCode errorCode, HttpServletRequest request, String traceId) {
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
+    private ResponseEntity<StandardResponse<Void>> buildResponse(HttpStatus status, String message, ErrorCode errorCode, HttpServletRequest request, String traceId) {
+        StandardResponse<Void> response = StandardResponse.<Void>builder()
                 .timestamp(Instant.now())
                 .status(status.value())
                 .message(message)

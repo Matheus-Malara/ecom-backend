@@ -2,7 +2,7 @@ package br.com.ecommerce.ecom.controller;
 
 import br.com.ecommerce.ecom.dto.filters.OrderFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.UpdateOrderStatusRequestDTO;
-import br.com.ecommerce.ecom.dto.responses.ApiResponse;
+import br.com.ecommerce.ecom.dto.responses.StandardResponse;
 import br.com.ecommerce.ecom.dto.responses.OrderResponseDTO;
 import br.com.ecommerce.ecom.entity.Order;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
@@ -35,7 +35,7 @@ public class AdminOrderController {
     private final OrderMapper orderMapper;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<OrderResponseDTO>>> getOrdersFiltered(
+    public ResponseEntity<StandardResponse<Page<OrderResponseDTO>>> getOrdersFiltered(
             @Valid @ModelAttribute OrderFilterDTO filter,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
@@ -47,7 +47,7 @@ public class AdminOrderController {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrderResponseDTO>> getOrder(@PathVariable Long id) {
+    public ResponseEntity<StandardResponse<OrderResponseDTO>> getOrder(@PathVariable Long id) {
         Order order = orderService.getOrderById(id);
         OrderResponseDTO response = orderMapper.toResponseDTO(order);
 
@@ -55,8 +55,8 @@ public class AdminOrderController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<OrderResponseDTO>> updateOrderStatus(@PathVariable Long id,
-                                                                           @RequestBody @Valid UpdateOrderStatusRequestDTO dto) {
+    public ResponseEntity<StandardResponse<OrderResponseDTO>> updateOrderStatus(@PathVariable Long id,
+                                                                                @RequestBody @Valid UpdateOrderStatusRequestDTO dto) {
         Order order = orderService.updateOrderStatus(id, dto.getStatus());
         OrderResponseDTO response = orderMapper.toResponseDTO(order);
         return responseFactory.okResponse(response, "Order status updated", ADMIN_ORDERS_BASE_PATH + id);
