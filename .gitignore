@@ -1,37 +1,62 @@
+# Arquivos do projeto
 HELP.md
-.gradle
+
+# Build & Gradle
+.gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Arquivos de log e temporários
+*.log
+*.tmp
+
+# Arquivos sensíveis e de configuração
+.env
+.env.*
+*.properties
+*.secret
+*.key
+*.pem
+*.crt
+*.p12
+
+# Diretórios binários e compilados
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### NetBeans ###
+# IDEs
+
+## Spring Tool Suite (STS)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+## IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+## NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
+## VS Code
 .vscode/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
