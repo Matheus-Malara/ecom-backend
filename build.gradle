@@ -39,8 +39,8 @@ dependencies {
     // PostgreSQL Driver
     implementation 'org.postgresql:postgresql:42.7.3'
 
-    // FlyWay
-    implementation 'org.flywaydb:flyway-core'
+    //Liquibase
+    implementation 'org.liquibase:liquibase-core'
 
     // Feign Client
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'

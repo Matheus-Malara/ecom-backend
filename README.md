@@ -185,8 +185,6 @@ A Postman collection will be provided in the repository to make it easy to test 
 
 ## 📈 Future Improvements
 
-- Swagger/OpenAPI documentation
-- Flyway for database versioning
 - Add integration/service tests
 - Separate `dev`/`prod` profiles
 - Product reviews and rating system
