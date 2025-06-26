@@ -1,0 +1,520 @@
+databaseChangeLog:
+- changeSet:
+    id: 1750966416423-1
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: carts_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: checked_out
+            type: BOOLEAN
+        - column:
+            name: created_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        - column:
+            name: updated_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: user_id
+            type: BIGINT
+        tableName: carts
+- changeSet:
+    id: 1750966416423-2
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: orders_pkey
+            name: id
+            type: BIGINT
+        - column:
+            name: created_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        - column:
+            name: status
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: total_amount
+            type: numeric(38, 2)
+        - column:
+            constraints:
+              nullable: false
+            name: user_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: updated_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        tableName: orders
+- changeSet:
+    id: 1750966416423-3
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: active
+            type: BOOLEAN
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: brands_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(100)
+        - column:
+            name: logo_url
+            type: VARCHAR(200)
+        - column:
+            name: description
+            type: VARCHAR(500)
+        tableName: brands
+- changeSet:
+    id: 1750966416423-4
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: active
+            type: BOOLEAN
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: categories_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(100)
+        - column:
+            name: image_url
+            type: VARCHAR(200)
+        - column:
+            name: description
+            type: VARCHAR(500)
+        tableName: categories
+- changeSet:
+    id: 1750966416423-5
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: users_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: email
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: first_name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: keycloak_user_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: last_name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: active
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: updated_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        tableName: users
+- changeSet:
+    id: 1750966416423-6
+    author: Matheus
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_id
+        indexName: uk_user_active_cart
+        tableName: carts
+        unique: true
+- changeSet:
+    id: 1750966416423-7
+    author: Matheus
+    changes:
+    - addUniqueConstraint:
+        columnNames: name
+        constraintName: brands_name_key
+        tableName: brands
+- changeSet:
+    id: 1750966416423-8
+    author: Matheus
+    changes:
+    - addUniqueConstraint:
+        columnNames: name
+        constraintName: categories_name_key
+        tableName: categories
+- changeSet:
+    id: 1750966416423-9
+    author: Matheus
+    changes:
+    - addUniqueConstraint:
+        columnNames: email
+        constraintName: users_email_key
+        tableName: users
+- changeSet:
+    id: 1750966416423-10
+    author: Matheus
+    changes:
+    - addUniqueConstraint:
+        columnNames: keycloak_user_id
+        constraintName: users_keycloak_user_id_key
+        tableName: users
+- changeSet:
+    id: 1750966416423-11
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: cart_items_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: quantity
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: cart_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: product_id
+            type: BIGINT
+        tableName: cart_items
+- changeSet:
+    id: 1750966416423-12
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: order_items_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: quantity
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: price_per_unit
+            type: numeric(38, 2)
+        - column:
+            constraints:
+              nullable: false
+            name: order_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: product_id
+            type: BIGINT
+        tableName: order_items
+- changeSet:
+    id: 1750966416423-13
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: display_order
+            type: INTEGER
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: product_images_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: product_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: image_url
+            type: VARCHAR(500)
+        tableName: product_images
+- changeSet:
+    id: 1750966416423-14
+    author: Matheus
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: active
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: price
+            type: numeric(38, 2)
+        - column:
+            constraints:
+              nullable: false
+            name: stock
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: weight_grams
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: brand_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: category_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: products_pkey
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: updated_at
+            type: TIMESTAMP WITHOUT TIME ZONE
+        - column:
+            name: flavor
+            type: VARCHAR(50)
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(150)
+        - column:
+            name: description
+            type: TEXT
+        tableName: products
+- changeSet:
+    id: 1750966416423-15
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: product_id
+        baseTableName: cart_items
+        constraintName: fk1re40cjegsfvw58xrkdp6bac6
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: products
+        validate: true
+- changeSet:
+    id: 1750966416423-16
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: orders
+        constraintName: fk32ql8ubntj5uh44ph9659tiih
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1750966416423-17
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: brand_id
+        baseTableName: products
+        constraintName: fka3a4mpsfdf4d2y6r8ra3sc8mv
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: brands
+        validate: true
+- changeSet:
+    id: 1750966416423-18
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: carts
+        constraintName: fkb5o626f86h46m4s7ms6ginnop
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+- changeSet:
+    id: 1750966416423-19
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: order_id
+        baseTableName: order_items
+        constraintName: fkbioxgbv59vetrxe0ejfubep1w
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: orders
+        validate: true
+- changeSet:
+    id: 1750966416423-20
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: product_id
+        baseTableName: order_items
+        constraintName: fkocimc7dtr037rh4ls4l95nlfi
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: products
+        validate: true
+- changeSet:
+    id: 1750966416423-21
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: category_id
+        baseTableName: products
+        constraintName: fkog2rp4qthbtt2lfyhfo32lsw9
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: categories
+        validate: true
+- changeSet:
+    id: 1750966416423-22
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: cart_id
+        baseTableName: cart_items
+        constraintName: fkpcttvuq4mxppo8sxggjtn5i2c
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: carts
+        validate: true
+- changeSet:
+    id: 1750966416423-23
+    author: Matheus
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: product_id
+        baseTableName: product_images
+        constraintName: fkqnq71xsohugpqwf3c9gxmsuy
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: products
+        validate: true
+
