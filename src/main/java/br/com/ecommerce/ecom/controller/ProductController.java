@@ -2,6 +2,7 @@ package br.com.ecommerce.ecom.controller;
 
 import br.com.ecommerce.ecom.dto.filters.ProductFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.ProductRequestDTO;
+import br.com.ecommerce.ecom.dto.responses.ProductImageResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.StandardResponse;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
@@ -53,12 +54,12 @@ public class ProductController {
 
     @Operation(summary = "Upload product image", description = "Uploads an image for the specified product.")
     @PostMapping("/{id}/upload-image")
-    public ResponseEntity<StandardResponse<String>> uploadProductImage(
+    public ResponseEntity<StandardResponse<ProductImageResponseDTO>> uploadProductImage(
             @Parameter(description = "Product ID", example = "1") @PathVariable Long id,
             @RequestParam("file") MultipartFile file) throws IOException {
 
-        String imageUrl = productService.uploadImage(id, file);
-        return responseFactory.okResponse(imageUrl, "Image uploaded successfully", PRODUCT_BASE_PATH + "/" + id + "/upload-image");
+        ProductImageResponseDTO response = productService.uploadImage(id, file);
+        return responseFactory.okResponse(response, "Image uploaded successfully", PRODUCT_BASE_PATH + "/" + id + "/upload-image");
     }
 
     @Operation(summary = "Get filtered products", description = "Returns a paginated and filtered list of products.")

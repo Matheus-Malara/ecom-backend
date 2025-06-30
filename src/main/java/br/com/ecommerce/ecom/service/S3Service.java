@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -29,7 +30,8 @@ public class S3Service {
         assert originalFilename != null;
         String extension = getFileExtension(originalFilename);
         String sanitizedProductName = productName.toLowerCase().replaceAll("[^a-z0-9]+", "-");
-        String filename = String.format("products/%d/%s-%s.%s",
+
+        String key = String.format("products/%d/%s-%s.%s",
                 productId,
                 sanitizedProductName,
                 UUID.randomUUID(),
@@ -37,14 +39,13 @@ public class S3Service {
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(filename)
+                .key(key)
                 .contentType(file.getContentType())
                 .build();
 
-        s3Client.putObject(putObjectRequest, software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
-        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-        return String.format("https://%s.s3.amazonaws.com/%s", bucketName, encodedFilename);
+        return String.format("https://%s.s3.amazonaws.com/%s", bucketName, URLEncoder.encode(key, StandardCharsets.UTF_8));
     }
 
     public void deleteFile(String key) {
