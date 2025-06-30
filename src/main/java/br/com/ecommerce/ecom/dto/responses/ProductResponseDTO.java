@@ -37,8 +37,8 @@ public class ProductResponseDTO {
     @Schema(description = "Flavor of the product", example = "Chocolate")
     private String flavor;
 
-    @Schema(description = "List of image URLs")
-    private List<String> imageUrls;
+    @Schema(description = "List of product images with ID and URL")
+    private List<ProductImageResponseDTO> images;
 
     @Schema(description = "Indicates if the product is active", example = "true")
     private Boolean active;

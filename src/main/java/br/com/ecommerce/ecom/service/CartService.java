@@ -1,7 +1,6 @@
 package br.com.ecommerce.ecom.service;
 
 import br.com.ecommerce.ecom.dto.requests.AddToCartRequestDTO;
-import br.com.ecommerce.ecom.dto.requests.UpdateCartItemRequestDTO;
 import br.com.ecommerce.ecom.entity.Cart;
 import br.com.ecommerce.ecom.entity.CartItem;
 import br.com.ecommerce.ecom.entity.Product;
@@ -57,17 +56,18 @@ public class CartService {
     }
 
     @Transactional
-    public Cart updateItemQuantity(UpdateCartItemRequestDTO dto, User user) {
+    public Cart updateItemQuantity(User user, Long productId, int quantity) {
         Cart cart = getOrCreateCart(user);
-        Product product = productService.getExistingProduct(dto.getProductId());
+        Product product = productService.getExistingProduct(productId);
 
         CartItem item = findCartItemOrThrow(cart, product);
-        item.setQuantity(dto.getQuantity());
+        item.setQuantity(quantity);
         cartItemRepository.save(item);
 
-        logCartAction(user, "Updated quantity of product " + product.getId());
+        logCartAction(user, "Updated quantity of product " + productId);
         return updateCartTimestamp(cart);
     }
+
 
     @Transactional
     public Cart removeItem(User user, Long productId) {

@@ -28,6 +28,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/products")
@@ -46,6 +49,16 @@ public class ProductController {
             @RequestBody @Valid ProductRequestDTO dto) {
         ProductResponseDTO response = productService.createProduct(dto);
         return responseFactory.createdResponse(response, "Product created successfully", PRODUCT_BASE_PATH);
+    }
+
+    @Operation(summary = "Upload product image", description = "Uploads an image for the specified product.")
+    @PostMapping("/{id}/upload-image")
+    public ResponseEntity<StandardResponse<String>> uploadProductImage(
+            @Parameter(description = "Product ID", example = "1") @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        String imageUrl = productService.uploadImage(id, file);
+        return responseFactory.okResponse(imageUrl, "Image uploaded successfully", PRODUCT_BASE_PATH + "/" + id + "/upload-image");
     }
 
     @Operation(summary = "Get filtered products", description = "Returns a paginated and filtered list of products.")
@@ -85,6 +98,16 @@ public class ProductController {
             @Parameter(description = "Product ID", example = "1") @PathVariable Long id) {
         productService.deleteProduct(id);
         return responseFactory.noContentResponse("Product deleted successfully", PRODUCT_BASE_PATH + "/" + id);
+    }
+
+    @Operation(summary = "Delete product image", description = "Removes an image from a product and deletes it from S3.")
+    @DeleteMapping("/{productId}/images/{imageId}")
+    public ResponseEntity<StandardResponse<Void>> deleteProductImage(
+            @PathVariable Long productId,
+            @PathVariable Long imageId) {
+
+        productService.deleteProductImage(productId, imageId);
+        return responseFactory.noContentResponse("Image deleted successfully", PRODUCT_BASE_PATH + "/" + productId + "/images/" + imageId);
     }
 
     @Operation(summary = "Update product status", description = "Activates or deactivates a product.")

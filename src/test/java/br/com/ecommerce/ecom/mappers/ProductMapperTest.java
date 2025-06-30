@@ -1,7 +1,11 @@
 package br.com.ecommerce.ecom.mappers;
 
+import br.com.ecommerce.ecom.dto.responses.ProductImageResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
-import br.com.ecommerce.ecom.entity.*;
+import br.com.ecommerce.ecom.entity.Brand;
+import br.com.ecommerce.ecom.entity.Category;
+import br.com.ecommerce.ecom.entity.Product;
+import br.com.ecommerce.ecom.entity.ProductImage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -9,7 +13,9 @@ import org.mapstruct.factory.Mappers;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ProductMapperTest {
 
@@ -35,11 +41,13 @@ class ProductMapperTest {
         ProductImage image1 = ProductImage.builder()
                 .id(1L)
                 .imageUrl("https://example.com/image1.jpg")
+                .displayOrder(0)
                 .build();
 
         ProductImage image2 = ProductImage.builder()
                 .id(2L)
                 .imageUrl("https://example.com/image2.jpg")
+                .displayOrder(1)
                 .build();
 
         Product product = Product.builder()
@@ -69,10 +77,18 @@ class ProductMapperTest {
         assertEquals("Vanilla", dto.getFlavor());
         assertTrue(dto.getActive());
 
-        assertNotNull(dto.getImageUrls());
-        assertEquals(2, dto.getImageUrls().size());
-        assertTrue(dto.getImageUrls().contains("https://example.com/image1.jpg"));
-        assertTrue(dto.getImageUrls().contains("https://example.com/image2.jpg"));
+        assertNotNull(dto.getImages());
+        assertEquals(2, dto.getImages().size());
+
+        ProductImageResponseDTO dtoImage1 = dto.getImages().getFirst();
+        assertEquals(1L, dtoImage1.getId());
+        assertEquals("https://example.com/image1.jpg", dtoImage1.getImageUrl());
+        assertEquals(0, dtoImage1.getDisplayOrder());
+
+        ProductImageResponseDTO dtoImage2 = dto.getImages().get(1);
+        assertEquals(2L, dtoImage2.getId());
+        assertEquals("https://example.com/image2.jpg", dtoImage2.getImageUrl());
+        assertEquals(1, dtoImage2.getDisplayOrder());
     }
 
     @Test
@@ -100,7 +116,7 @@ class ProductMapperTest {
         assertEquals("Isolate Protein", dto.getName());
         assertEquals("Isolates", dto.getCategoryName());
         assertEquals("Black Skull", dto.getBrandName());
-        assertNotNull(dto.getImageUrls());
-        assertTrue(dto.getImageUrls().isEmpty());
+        assertNotNull(dto.getImages());
+        assertTrue(dto.getImages().isEmpty());
     }
 }
