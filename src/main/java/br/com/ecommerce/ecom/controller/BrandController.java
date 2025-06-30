@@ -143,10 +143,7 @@ public class BrandController {
             @Parameter(description = "Brand ID", example = "1") @PathVariable Long id) {
 
         brandService.deleteBrand(id);
-        return responseFactory.noContentResponse(
-                "Brand deleted successfully",
-                BRAND_BASE_PATH + "/" + id
-        );
+        return responseFactory.noContentResponse("Brand deleted successfully", BRAND_BASE_PATH + "/" + id);
     }
 
 

@@ -8,6 +8,7 @@ import br.com.ecommerce.ecom.entity.Category;
 import br.com.ecommerce.ecom.entity.Product;
 import br.com.ecommerce.ecom.entity.ProductImage;
 import br.com.ecommerce.ecom.exception.ProductNotFoundException;
+import br.com.ecommerce.ecom.exception.ResourceNotFoundException;
 import br.com.ecommerce.ecom.mappers.ProductMapper;
 import br.com.ecommerce.ecom.repository.ProductRepository;
 import br.com.ecommerce.ecom.specification.ProductSpecification;
@@ -18,8 +19,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,6 +36,7 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final CategoryService categoryService;
     private final BrandService brandService;
+    private final S3Service s3Service;
 
     public ProductResponseDTO createProduct(ProductRequestDTO dto) {
         log.info("Creating product with name: {}", dto.getName());
@@ -59,6 +64,42 @@ public class ProductService {
         return productMapper.toResponseDTO(savedProduct);
     }
 
+    public String uploadImage(Long productId, MultipartFile file) throws IOException {
+        Product product = getExistingProduct(productId);
+        String imageUrl = s3Service.uploadFile(file, productId, product.getName());
+
+        int order = product.getImages().size();
+
+        ProductImage image = ProductImage.builder()
+                .imageUrl(imageUrl)
+                .product(product)
+                .displayOrder(order)
+                .build();
+
+        product.getImages().add(image);
+        productRepository.save(product);
+
+        return imageUrl;
+    }
+
+
+    @Transactional
+    public void deleteProductImage(Long productId, Long imageId) {
+        Product product = getExistingProduct(productId);
+
+        ProductImage image = product.getImages().stream()
+                .filter(img -> img.getId().equals(imageId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found for this product"));
+
+        String s3Key = extractS3KeyFromUrl(image.getImageUrl());
+        s3Service.deleteFile(s3Key);
+
+        product.getImages().remove(image); // remove da lista de imagens
+        productRepository.save(product);  // cascata remove do banco
+    }
+
+
     public Page<ProductResponseDTO> getProductFiltered(ProductFilterDTO filter, Pageable pageable) {
         Specification<Product> spec = ProductSpecification.withFilters(filter);
 
@@ -67,7 +108,6 @@ public class ProductService {
         return productRepository.findAll(spec, pageable)
                 .map(productMapper::toResponseDTO);
     }
-
 
     public ProductResponseDTO getProductById(Long id) {
         log.debug("Fetching product by ID: {}", id);
@@ -118,14 +158,18 @@ public class ProductService {
     // ========= Helpers =========
 
     private List<ProductImage> convertToProductImages(List<String> imageUrls, Product product) {
+        AtomicInteger index = new AtomicInteger(0);
+
         return imageUrls.stream()
                 .distinct()
                 .map(url -> ProductImage.builder()
                         .imageUrl(url)
                         .product(product)
+                        .displayOrder(index.getAndIncrement())
                         .build())
                 .collect(Collectors.toList());
     }
+
 
     public Product getExistingProduct(Long id) {
         return productRepository.findById(id)
@@ -134,4 +178,9 @@ public class ProductService {
                     return new ProductNotFoundException(id);
                 });
     }
+
+    private String extractS3KeyFromUrl(String imageUrl) {
+        return imageUrl.replaceFirst(".+amazonaws\\.com/", "");
+    }
+
 }
