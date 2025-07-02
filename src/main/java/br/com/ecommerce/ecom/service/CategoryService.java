@@ -4,6 +4,7 @@ import br.com.ecommerce.ecom.dto.filters.CategoryFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.CategoryRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.CategoryResponseDTO;
 import br.com.ecommerce.ecom.entity.Category;
+import br.com.ecommerce.ecom.enums.UploadType;
 import br.com.ecommerce.ecom.exception.CategoryNotFoundException;
 import br.com.ecommerce.ecom.exception.DuplicateCategoryNameException;
 import br.com.ecommerce.ecom.mappers.CategoryMapper;
@@ -16,16 +17,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final S3Service s3Service;
 
+    @Transactional
     public CategoryResponseDTO createCategory(CategoryRequestDTO dto) {
         log.info("Creating category with name: {}", dto.getName());
         validateCategoryNameUniqueness(dto.getName());
@@ -35,6 +40,23 @@ public class CategoryService {
 
         log.info("Category created successfully with ID: {}", savedCategory.getId());
         return categoryMapper.toResponseDTO(savedCategory);
+    }
+
+    @Transactional
+    public CategoryResponseDTO uploadImage(Long categoryId, MultipartFile file) throws IOException {
+        Category category = getExistingCategory(categoryId);
+
+        if (category.getImageUrl() != null) {
+            String previousKey = s3Service.extractKeyFromUrl(category.getImageUrl());
+            s3Service.deleteFile(previousKey);
+        }
+
+        String newImageUrl = s3Service.uploadFile(file, UploadType.CATEGORIES, categoryId, category.getName());
+        category.setImageUrl(newImageUrl);
+        categoryRepository.save(category);
+
+        log.info("Replaced category image for ID {} with new image", categoryId);
+        return categoryMapper.toResponseDTO(category);
     }
 
     public Page<CategoryResponseDTO> getCategoryFiltered(CategoryFilterDTO filter, Pageable pageable) {
@@ -48,13 +70,14 @@ public class CategoryService {
 
     public CategoryResponseDTO getCategoryById(Long id) {
         log.debug("Fetching category by ID: {}", id);
-        Category category = findExistingCategory(id);
+        Category category = getExistingCategory(id);
         return categoryMapper.toResponseDTO(category);
     }
 
+    @Transactional
     public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO dto) {
         log.info("Updating category with ID: {}", id);
-        Category category = findExistingCategory(id);
+        Category category = getExistingCategory(id);
 
         categoryMapper.updateEntityFromDTO(dto, category);
         Category updatedCategory = categoryRepository.save(category);
@@ -63,16 +86,31 @@ public class CategoryService {
         return categoryMapper.toResponseDTO(updatedCategory);
     }
 
+    @Transactional
     public void deleteCategory(Long id) {
         log.info("Deleting category with ID: {}", id);
-        Category category = findExistingCategory(id);
+        Category category = getExistingCategory(id);
         categoryRepository.delete(category);
         log.info("Category with ID {} deleted successfully", id);
     }
 
+    @Transactional
+    public void deleteImage(Long categoryId) {
+        Category category = getExistingCategory(categoryId);
+
+        if (category.getImageUrl() != null) {
+            String key = s3Service.extractKeyFromUrl(category.getImageUrl());
+            s3Service.deleteFile(key);
+            category.setImageUrl(null);
+            categoryRepository.save(category);
+            log.info("Image deleted for category with ID: {}", categoryId);
+        }
+    }
+
+    @Transactional
     public void updateCategoryStatus(Long id, boolean active) {
         log.info("Updating status of category ID {} to: {}", id, active);
-        Category category = findExistingCategory(id);
+        Category category = getExistingCategory(id);
         category.setActive(active);
         categoryRepository.save(category);
         log.info("Category ID {} status updated to {}", id, active);
@@ -81,7 +119,7 @@ public class CategoryService {
     // ========= Helpers =========
 
 
-    public Category findExistingCategory(Long id) {
+    public Category getExistingCategory(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Category with ID {} not found", id);

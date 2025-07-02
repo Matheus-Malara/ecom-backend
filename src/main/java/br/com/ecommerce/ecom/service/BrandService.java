@@ -4,6 +4,7 @@ import br.com.ecommerce.ecom.dto.filters.BrandFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.BrandRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.BrandResponseDTO;
 import br.com.ecommerce.ecom.entity.Brand;
+import br.com.ecommerce.ecom.enums.UploadType;
 import br.com.ecommerce.ecom.exception.BrandNotFoundException;
 import br.com.ecommerce.ecom.exception.DuplicateBrandNameException;
 import br.com.ecommerce.ecom.mappers.BrandMapper;
@@ -16,16 +17,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class BrandService {
 
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
+    private final S3Service s3Service;
 
+    @Transactional
     public BrandResponseDTO createBrand(BrandRequestDTO dto) {
         log.info("Creating brand with name: {}", dto.getName());
         validateBrandyNameUniqueness(dto.getName());
@@ -35,6 +40,23 @@ public class BrandService {
 
         log.info("Brand created successfully with ID: {}", savedBrand.getId());
         return brandMapper.toResponseDTO(savedBrand);
+    }
+
+    @Transactional
+    public BrandResponseDTO uploadImage(Long brandId, MultipartFile file) throws IOException {
+        Brand brand = getExistingBrand(brandId);
+
+        if (brand.getLogoUrl() != null) {
+            String previousKey = s3Service.extractKeyFromUrl(brand.getLogoUrl());
+            s3Service.deleteFile(previousKey);
+        }
+
+        String logoUrl = s3Service.uploadFile(file, UploadType.BRANDS, brandId, brand.getName());
+        brand.setLogoUrl(logoUrl);
+        brandRepository.save(brand);
+
+        log.info("Replaced logo for brand ID {}", brandId);
+        return brandMapper.toResponseDTO(brand);
     }
 
     public Page<BrandResponseDTO> getBrandFiltered(BrandFilterDTO filter, Pageable pageable) {
@@ -52,6 +74,7 @@ public class BrandService {
         return brandMapper.toResponseDTO(brand);
     }
 
+    @Transactional
     public BrandResponseDTO updateBrand(Long id, BrandRequestDTO dto) {
         log.info("Updating brand with ID: {}", id);
         Brand brand = getExistingBrand(id);
@@ -63,6 +86,7 @@ public class BrandService {
         return brandMapper.toResponseDTO(updatedBrand);
     }
 
+    @Transactional
     public void deleteBrand(Long id) {
         log.info("Deleting brand with ID: {}", id);
         Brand brand = getExistingBrand(id);
@@ -70,6 +94,21 @@ public class BrandService {
         log.info("Brand with ID {} deleted successfully", id);
     }
 
+    @Transactional
+    public void deleteImage(Long brandId) {
+        Brand brand = getExistingBrand(brandId);
+
+        if (brand.getLogoUrl() != null) {
+            String key = s3Service.extractKeyFromUrl(brand.getLogoUrl());
+            s3Service.deleteFile(key);
+            brand.setLogoUrl(null);
+            brandRepository.save(brand);
+
+            log.info("Deleted logo for brand ID {}", brandId);
+        }
+    }
+
+    @Transactional
     public void updateBrandStatus(Long id, boolean active) {
         log.info("Updating status of brand ID {} to: {}", id, active);
         Brand brand = getExistingBrand(id);

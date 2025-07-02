@@ -31,6 +31,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/brands")
@@ -61,6 +64,24 @@ public class BrandController {
                 "Brand created successfully",
                 BRAND_BASE_PATH
         );
+    }
+
+
+    @Operation(
+            summary = "Upload brand logo",
+            description = "Uploads a new logo to S3 for the brand. If an logo already exists, it will be replaced."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Image uploaded successfully"),
+            @ApiResponse(responseCode = "404", description = "Brand not found", content = @Content)
+    })
+    @PostMapping("/{id}/upload-logo")
+    public ResponseEntity<StandardResponse<BrandResponseDTO>> uploadBrandImage(
+            @Parameter(description = "Brand ID", example = "1") @PathVariable Long id,
+            @Parameter(description = "Image file") @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        BrandResponseDTO response = brandService.uploadImage(id, file);
+        return responseFactory.okResponse(response, "Image uploaded successfully", "/api/brands/" + id + "/logoUrl");
     }
 
 
@@ -144,6 +165,23 @@ public class BrandController {
 
         brandService.deleteBrand(id);
         return responseFactory.noContentResponse("Brand deleted successfully", BRAND_BASE_PATH + "/" + id);
+    }
+
+
+    @Operation(
+            summary = "Delete brand image",
+            description = "Deletes the brand's image from S3 and clears the logoUrl"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Image deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Brand not found", content = @Content)
+    })
+    @DeleteMapping("/{id}/image")
+    public ResponseEntity<StandardResponse<Void>> deleteBrandImage(
+            @Parameter(description = "Brand ID", example = "1") @PathVariable Long id
+    ) {
+        brandService.deleteImage(id);
+        return responseFactory.noContentResponse("Brand image deleted successfully", "/api/brands/" + id + "/image");
     }
 
 

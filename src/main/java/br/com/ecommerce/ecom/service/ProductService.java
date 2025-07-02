@@ -8,6 +8,7 @@ import br.com.ecommerce.ecom.entity.Brand;
 import br.com.ecommerce.ecom.entity.Category;
 import br.com.ecommerce.ecom.entity.Product;
 import br.com.ecommerce.ecom.entity.ProductImage;
+import br.com.ecommerce.ecom.enums.UploadType;
 import br.com.ecommerce.ecom.exception.ProductNotFoundException;
 import br.com.ecommerce.ecom.exception.ResourceNotFoundException;
 import br.com.ecommerce.ecom.mappers.ProductMapper;
@@ -45,7 +46,7 @@ public class ProductService {
     public ProductResponseDTO createProduct(ProductRequestDTO dto) {
         log.info("Creating product with name: {}", dto.getName());
 
-        Category category = categoryService.findExistingCategory(dto.getCategoryId());
+        Category category = categoryService.getExistingCategory(dto.getCategoryId());
         Brand brand = brandService.getExistingBrand(dto.getBrandId());
 
         Product product = Product.builder()
@@ -71,7 +72,7 @@ public class ProductService {
     @Transactional
     public ProductImageResponseDTO uploadImage(Long productId, MultipartFile file) throws IOException {
         Product product = getExistingProduct(productId);
-        String imageUrl = s3Service.uploadFile(file, productId, product.getName());
+        String imageUrl = s3Service.uploadFile(file, UploadType.PRODUCTS, productId, product.getName());
 
         int order = product.getImages().size();
 
@@ -103,7 +104,7 @@ public class ProductService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found for this product"));
 
-        String s3Key = extractS3KeyFromUrl(image.getImageUrl());
+        String s3Key = s3Service.extractKeyFromUrl(image.getImageUrl());
         s3Service.deleteFile(s3Key);
 
         product.getImages().remove(image);
@@ -130,7 +131,7 @@ public class ProductService {
         log.info("Updating product with ID: {}", id);
 
         Product product = getExistingProduct(id);
-        Category category = categoryService.findExistingCategory(dto.getCategoryId());
+        Category category = categoryService.getExistingCategory(dto.getCategoryId());
         Brand brand = brandService.getExistingBrand(dto.getBrandId());
 
         product.setName(dto.getName());
@@ -188,10 +189,5 @@ public class ProductService {
                     log.warn("Product with ID {} not found", id);
                     return new ProductNotFoundException(id);
                 });
-    }
-
-    private String extractS3KeyFromUrl(String imageUrl) {
-        String rawKey = imageUrl.replaceFirst(".+amazonaws\\.com/", "");
-        return java.net.URLDecoder.decode(rawKey, java.nio.charset.StandardCharsets.UTF_8);
     }
 }
