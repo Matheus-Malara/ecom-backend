@@ -34,11 +34,13 @@ public class S3Service {
         String sanitizedName = entityName.toLowerCase().replaceAll("[^a-z0-9]+", "-");
 
         String key = String.format(
-                type.name().toLowerCase(), // products, brands, categories
+                "%s/%d-%s-%s.%s", // ex: products/1-whey-protein-uuid.jpg
+                type.name().toLowerCase(),
                 entityId,
                 sanitizedName,
                 UUID.randomUUID(),
-                extension);
+                extension
+        );
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
