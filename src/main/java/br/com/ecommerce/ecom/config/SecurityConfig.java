@@ -59,6 +59,7 @@ public class SecurityConfig {
                         // ✅ Public GET endpoints
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll() // 👈 ADICIONE ESTA LINHA
 
                         // Cart
                         .requestMatchers("/api/cart/**").hasAnyRole("USER", "ADMIN")
@@ -74,12 +75,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/**").hasRole("ADMIN")
 
-                        // ❌ Any other GET under /api/** still requires auth
+                        // ❌ Qualquer outro GET em /api/** requer login
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER", "ADMIN")
 
-                        // Everything else
+                        // Tudo que sobrar
                         .anyRequest().authenticated()
                 )
+
                 .oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 );
