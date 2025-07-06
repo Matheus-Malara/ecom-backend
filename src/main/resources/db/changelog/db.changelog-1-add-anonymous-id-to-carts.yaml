@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250705-01
+      author: Matheus
+      changes:
+        - addColumn:
+            tableName: carts
+            columns:
+              - column:
+                  name: anonymous_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: true
+        - createIndex:
+            indexName: idx_carts_anonymous_id
+            tableName: carts
+            columns:
+              - column:
+                  name: anonymous_id

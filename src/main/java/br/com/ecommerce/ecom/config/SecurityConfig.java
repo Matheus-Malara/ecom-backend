@@ -59,10 +59,13 @@ public class SecurityConfig {
                         // ✅ Public GET endpoints
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll() // 👈 ADICIONE ESTA LINHA
+                        .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
 
                         // Cart
-                        .requestMatchers("/api/cart/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/cart/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/cart/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cart/**").permitAll()
 
                         // Orders
                         .requestMatchers(HttpMethod.POST, "/api/orders/**").hasAnyRole("USER", "ADMIN")

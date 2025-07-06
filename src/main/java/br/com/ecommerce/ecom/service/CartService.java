@@ -16,22 +16,27 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CartService {
-    private static final String LOG_USER_CART_ACTION = "User {} cart action: {}";
+    private static final String LOG_USER_CART_ACTION = "Cart (user={}, anonId={}) action: {}";
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductService productService;
 
     @Transactional(readOnly = true)
-    public Cart getOrCreateCart(User user) {
-        return findCurrentCart(user)
-                .orElseGet(() -> createNewCart(user));
+    public Cart getOrCreateCart(String anonymousId, User user) {
+        if (user != null) {
+            return findCurrentCart(user).orElseGet(() -> createNewCart(user));
+        } else {
+            return findCurrentCart(anonymousId).orElseGet(() -> createNewAnonymousCart(anonymousId));
+        }
     }
 
     @Transactional(readOnly = true)
@@ -40,9 +45,15 @@ public class CartService {
                 .map(this::initializeCartItems);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<Cart> findCurrentCart(String anonymousId) {
+        return cartRepository.findByAnonymousIdAndCheckedOutFalse(anonymousId)
+                .map(this::initializeCartItems);
+    }
+
     @Transactional
-    public Cart addItemToCart(AddToCartRequestDTO dto, User user) {
-        Cart cart = getOrCreateCart(user);
+    public Cart addItemToCart(AddToCartRequestDTO dto, String anonymousId, User user) {
+        Cart cart = getOrCreateCart(anonymousId, user);
         Product product = productService.getExistingProduct(dto.getProductId());
 
         cartItemRepository.findByCartAndProduct(cart, product)
@@ -51,33 +62,32 @@ public class CartService {
                         () -> addNewCartItem(cart, product, dto.getQuantity())
                 );
 
-        logCartAction(user, "Added/Updated product " + product.getId());
+        logCartAction(user, anonymousId, "Added/Updated product " + product.getId());
         return updateCartTimestamp(cart);
     }
 
     @Transactional
-    public Cart updateItemQuantity(User user, Long productId, int quantity) {
-        Cart cart = getOrCreateCart(user);
+    public Cart updateItemQuantity(String anonymousId, User user, Long productId, int quantity) {
+        Cart cart = getOrCreateCart(anonymousId, user);
         Product product = productService.getExistingProduct(productId);
 
         CartItem item = findCartItemOrThrow(cart, product);
         item.setQuantity(quantity);
         cartItemRepository.save(item);
 
-        logCartAction(user, "Updated quantity of product " + productId);
+        logCartAction(user, anonymousId, "Updated quantity of product " + productId);
         return updateCartTimestamp(cart);
     }
 
-
     @Transactional
-    public Cart removeItem(User user, Long productId) {
-        Cart cart = getOrCreateCart(user);
+    public Cart removeItem(String anonymousId, User user, Long productId) {
+        Cart cart = getOrCreateCart(anonymousId, user);
         Product product = productService.getExistingProduct(productId);
 
         CartItem item = findCartItemOrThrow(cart, product);
         cartItemRepository.delete(item);
 
-        logCartAction(user, "Removed product " + productId);
+        logCartAction(user, anonymousId, "Removed product " + productId);
         return updateCartTimestamp(cart);
     }
 
@@ -89,7 +99,19 @@ public class CartService {
                 .updatedAt(LocalDateTime.now())
                 .items(new ArrayList<>())
                 .build();
-        logCartAction(user, "Created new cart");
+        logCartAction(user, null, "Created new cart");
+        return cartRepository.save(newCart);
+    }
+
+    private Cart createNewAnonymousCart(String anonymousId) {
+        Cart newCart = Cart.builder()
+                .anonymousId(anonymousId)
+                .checkedOut(false)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .items(new ArrayList<>())
+                .build();
+        logCartAction(null, anonymousId, "Created new anonymous cart");
         return cartRepository.save(newCart);
     }
 
@@ -125,8 +147,8 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
-    private void logCartAction(User user, String action) {
-        log.info(LOG_USER_CART_ACTION, user.getEmail(), action);
+    private void logCartAction(User user, String anonymousId, String action) {
+        log.info(LOG_USER_CART_ACTION, user != null ? user.getEmail() : "null", anonymousId, action);
     }
 
     public Cart findActiveCartByUser(User user) {
@@ -140,4 +162,56 @@ public class CartService {
         cartRepository.save(cart);
     }
 
+    @Transactional
+    public void mergeAnonymousCartIfExists(String anonymousId, User user) {
+        Optional<Cart> anonymousCartOpt = cartRepository.findByAnonymousIdAndCheckedOutFalse(anonymousId);
+        Optional<Cart> userCartOpt = cartRepository.findByUserAndCheckedOutFalse(user);
+
+        if (anonymousCartOpt.isEmpty()) {
+            // Usuário não tem carrinho, criar um novo
+            userCartOpt.orElseGet(() -> createNewCart(user));
+            return;
+        }
+
+        Cart anonymousCart = anonymousCartOpt.get();
+
+        if (userCartOpt.isEmpty()) {
+            // Vincula o carrinho anônimo ao usuário
+            anonymousCart.setUser(user);
+            anonymousCart.setAnonymousId(null);
+            cartRepository.save(anonymousCart);
+            return;
+        }
+
+        Cart userCart = userCartOpt.get();
+
+        Map<Long, CartItem> userItemMap = userCart.getItems().stream()
+                .collect(Collectors.toMap(
+                        item -> item.getProduct().getId(),
+                        item -> item
+                ));
+
+        for (CartItem anonItem : anonymousCart.getItems()) {
+            Long productId = anonItem.getProduct().getId();
+
+            if (userItemMap.containsKey(productId)) {
+                // Item já existe no carrinho do usuário → soma a quantidade
+                CartItem existingItem = userItemMap.get(productId);
+                existingItem.setQuantity(existingItem.getQuantity() + anonItem.getQuantity());
+                cartItemRepository.save(existingItem);
+            } else {
+                // Item não existe → adiciona novo item
+                CartItem newItem = CartItem.builder()
+                        .cart(userCart)
+                        .product(anonItem.getProduct())
+                        .quantity(anonItem.getQuantity())
+                        .build();
+                cartItemRepository.save(newItem);
+                userCart.getItems().add(newItem);
+            }
+        }
+
+        // Remove carrinho anônimo do banco
+        cartRepository.delete(anonymousCart);
+    }
 }
