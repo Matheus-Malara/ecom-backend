@@ -1,16 +1,18 @@
 package br.com.ecommerce.ecom.service;
 
+import br.com.ecommerce.ecom.client.feign.keycloack.KeycloakUserClient;
 import br.com.ecommerce.ecom.entity.User;
 import br.com.ecommerce.ecom.exception.UserNotFoundException;
 import br.com.ecommerce.ecom.model.keycloack.UserRepresentation;
 import br.com.ecommerce.ecom.repository.UserRepository;
 import br.com.ecommerce.ecom.service.keycloack.KeycloakTokenService;
-import br.com.ecommerce.ecom.client.feign.keycloack.KeycloakUserClient;
 import br.com.ecommerce.ecom.util.TraceIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -48,5 +50,9 @@ public class LocalUserService {
         update.setEnabled(enabled);
 
         keycloakUserClient.updateUserEnabledStatus(keycloakUserId, update, accessToken);
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 }

@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2-make-user-id-nullable
+      author: Matheus
+      changes:
+        - dropNotNullConstraint:
+            tableName: carts
+            columnName: user_id
+            columnDataType: BIGINT

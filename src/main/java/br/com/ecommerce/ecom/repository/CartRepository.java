@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
     Optional<Cart> findByUserAndCheckedOutFalse(User user);
+
+    Optional<Cart> findByAnonymousIdAndCheckedOutFalse(String anonymousId);
 }
