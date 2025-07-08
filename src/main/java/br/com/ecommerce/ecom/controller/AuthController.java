@@ -3,7 +3,6 @@ package br.com.ecommerce.ecom.controller;
 import br.com.ecommerce.ecom.dto.requests.LoginRequestDTO;
 import br.com.ecommerce.ecom.dto.requests.RefreshTokenRequestDTO;
 import br.com.ecommerce.ecom.dto.requests.RegisterUserRequestDTO;
-import br.com.ecommerce.ecom.dto.requests.UpdateUserStatusRequest;
 import br.com.ecommerce.ecom.dto.responses.LoginResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.StandardResponse;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
@@ -16,9 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,13 +67,5 @@ public class AuthController {
 
         LoginResponseDTO response = keycloakLoginService.refreshAccessToken(request.getRefreshToken());
         return responseFactory.okResponse(response, "Token refreshed successfully", AUTH_BASE_PATH + "/refresh");
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/users/status")
-    public ResponseEntity<StandardResponse<Void>> updateUserStatusByEmail(@RequestBody @Valid UpdateUserStatusRequest request) {
-        userService.updateUserStatusByEmail(request.getEmail(), request.isActive());
-        String message = request.isActive() ? "User activated" : "User deactivated";
-        return responseFactory.okResponse(null, message, AUTH_BASE_PATH + "/users/status");
     }
 }

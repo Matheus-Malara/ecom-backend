@@ -1,14 +1,18 @@
 package br.com.ecommerce.ecom.service;
 
 import br.com.ecommerce.ecom.client.feign.keycloack.KeycloakUserClient;
+import br.com.ecommerce.ecom.dto.requests.UpdateUserRequestDTO;
+import br.com.ecommerce.ecom.dto.responses.UserResponseDTO;
 import br.com.ecommerce.ecom.entity.User;
 import br.com.ecommerce.ecom.exception.UserNotFoundException;
+import br.com.ecommerce.ecom.mappers.UserMapper;
 import br.com.ecommerce.ecom.model.keycloack.UserRepresentation;
 import br.com.ecommerce.ecom.repository.UserRepository;
 import br.com.ecommerce.ecom.service.keycloack.KeycloakTokenService;
 import br.com.ecommerce.ecom.util.TraceIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +28,7 @@ public class LocalUserService {
     private final UserRepository userRepository;
     private final KeycloakUserClient keycloakUserClient;
     private final KeycloakTokenService keycloakTokenService;
+    private final UserMapper userMapper;
 
     @Transactional
     public void updateUserStatusByEmail(String email, boolean active) {
@@ -54,5 +59,26 @@ public class LocalUserService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public UserResponseDTO getCurrentUserInfo() {
+        String keycloakId = getCurrentKeycloakUserId();
+        User user = userRepository.findByKeycloakUserId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return userMapper.toResponse(user);
+    }
+
+    @Transactional
+    public UserResponseDTO updateCurrentUser(UpdateUserRequestDTO dto) {
+        String keycloakId = getCurrentKeycloakUserId();
+        User user = userRepository.findByKeycloakUserId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        userMapper.updateUserFromDto(dto, user);
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    private String getCurrentKeycloakUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

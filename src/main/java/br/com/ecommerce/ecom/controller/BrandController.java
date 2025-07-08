@@ -81,7 +81,7 @@ public class BrandController {
             @Parameter(description = "Image file") @RequestParam("file") MultipartFile file
     ) throws IOException {
         BrandResponseDTO response = brandService.uploadImage(id, file);
-        return responseFactory.okResponse(response, "Image uploaded successfully", "/api/brands/" + id + "/logoUrl");
+        return responseFactory.okResponse(response, "Image uploaded successfully", BRAND_BASE_PATH + "/" + id + "/logoUrl");
     }
 
 
@@ -181,7 +181,7 @@ public class BrandController {
             @Parameter(description = "Brand ID", example = "1") @PathVariable Long id
     ) {
         brandService.deleteImage(id);
-        return responseFactory.noContentResponse("Brand image deleted successfully", "/api/brands/" + id + "/image");
+        return responseFactory.noContentResponse("Brand image deleted successfully", BRAND_BASE_PATH + "/" + id + "/image");
     }
 
 
