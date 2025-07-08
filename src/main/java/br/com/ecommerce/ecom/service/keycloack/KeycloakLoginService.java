@@ -1,14 +1,14 @@
 package br.com.ecommerce.ecom.service.keycloack;
 
-import br.com.ecommerce.ecom.entity.User;
-import br.com.ecommerce.ecom.exception.BusinessException;
-import br.com.ecommerce.ecom.exception.UserInactiveException;
-import br.com.ecommerce.ecom.exception.keycloack.KeycloakAuthenticationException;
 import br.com.ecommerce.ecom.config.keycloack.KeycloakProperties;
 import br.com.ecommerce.ecom.dto.requests.LoginRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.KeycloakTokenResponse;
 import br.com.ecommerce.ecom.dto.responses.LoginResponseDTO;
+import br.com.ecommerce.ecom.entity.User;
 import br.com.ecommerce.ecom.enums.ErrorCode;
+import br.com.ecommerce.ecom.exception.BusinessException;
+import br.com.ecommerce.ecom.exception.UserInactiveException;
+import br.com.ecommerce.ecom.exception.keycloack.KeycloakAuthenticationException;
 import br.com.ecommerce.ecom.repository.UserRepository;
 import br.com.ecommerce.ecom.util.TraceIdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +58,30 @@ public class KeycloakLoginService {
         } catch (Exception ex) {
             handleLoginError(request.getEmail(), ex);
             throw new KeycloakAuthenticationException("Failed to login via Keycloak: " + ex.getMessage());
+        }
+    }
+
+    public LoginResponseDTO refreshAccessToken(String refreshToken) {
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add(GRANT_TYPE_PARAM, "refresh_token");
+        form.add("refresh_token", refreshToken);
+        form.add(CLIENT_ID_PARAM, keycloakProperties.getClientId());
+        form.add(CLIENT_SECRET_PARAM, keycloakProperties.getClientSecret());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
+
+        String tokenUrl = buildTokenUrl();
+
+        try {
+            ResponseEntity<KeycloakTokenResponse> response = executeTokenRequest(tokenUrl, entity);
+            return processResponse(response, "refresh_token");
+        } catch (HttpStatusCodeException ex) {
+            throw new BusinessException("Invalid refresh token", ErrorCode.INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
+        } catch (Exception ex) {
+            throw new KeycloakAuthenticationException("Failed to refresh token: " + ex.getMessage());
         }
     }
 

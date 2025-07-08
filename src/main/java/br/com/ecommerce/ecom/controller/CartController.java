@@ -12,6 +12,9 @@ import br.com.ecommerce.ecom.service.CartService;
 import br.com.ecommerce.ecom.service.LocalUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,4 +104,23 @@ public class CartController {
         CartResponseDTO response = cartMapper.toResponse(cart);
         return responseFactory.okResponse(response, "Item removed from cart", CART_BASE_PATH + "/items/" + productId);
     }
+
+    @Operation(
+            summary = "Clear cart",
+            description = "Removes all items from the cart for authenticated or anonymous users."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Cart cleared successfully"),
+            @ApiResponse(responseCode = "404", description = "Cart not found", content = @Content)
+    })
+    @DeleteMapping
+    public ResponseEntity<StandardResponse<Void>> clearCart(
+            @RequestHeader(value = "X-Anonymous-Id", required = false) String anonymousId,
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+
+        User user = jwt != null ? userService.getUserByEmail(jwt.getClaim("email")) : null;
+        cartService.clearCart(anonymousId, user);
+        return responseFactory.noContentResponse("Cart cleared", CART_BASE_PATH);
+    }
+
 }
