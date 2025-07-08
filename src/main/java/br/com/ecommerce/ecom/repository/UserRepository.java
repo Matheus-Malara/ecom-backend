@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(@NotBlank(message = "Email is required") String email);
+
+    Optional<User> findByKeycloakUserId(String keycloakId);
 }

@@ -55,6 +55,7 @@ public class SecurityConfig {
 
                         // Auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // ✅ Public GET endpoints
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
@@ -78,10 +79,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/**").hasRole("ADMIN")
 
-                        // ❌ Qualquer outro GET em /api/** requer login
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER", "ADMIN")
 
-                        // Tudo que sobrar
                         .anyRequest().authenticated()
                 )
 
