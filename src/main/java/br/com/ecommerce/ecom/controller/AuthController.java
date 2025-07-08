@@ -1,6 +1,7 @@
 package br.com.ecommerce.ecom.controller;
 
 import br.com.ecommerce.ecom.dto.requests.LoginRequestDTO;
+import br.com.ecommerce.ecom.dto.requests.RefreshTokenRequestDTO;
 import br.com.ecommerce.ecom.dto.requests.RegisterUserRequestDTO;
 import br.com.ecommerce.ecom.dto.requests.UpdateUserStatusRequest;
 import br.com.ecommerce.ecom.dto.responses.LoginResponseDTO;
@@ -61,6 +62,14 @@ public class AuthController {
         }
 
         return responseFactory.okResponse(loginResponse, "User logged in successfully", AUTH_BASE_PATH + "/login");
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<StandardResponse<LoginResponseDTO>> refreshToken(
+            @RequestBody @Valid RefreshTokenRequestDTO request) {
+
+        LoginResponseDTO response = keycloakLoginService.refreshAccessToken(request.getRefreshToken());
+        return responseFactory.okResponse(response, "Token refreshed successfully", AUTH_BASE_PATH + "/refresh");
     }
 
     @PreAuthorize("hasRole('ADMIN')")

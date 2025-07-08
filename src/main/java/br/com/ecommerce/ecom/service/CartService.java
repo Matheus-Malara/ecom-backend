@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +62,7 @@ public class CartService {
                 );
 
         logCartAction(user, anonymousId, "Added/Updated product " + product.getId());
-        return updateCartTimestamp(cart);
+        return cart;
     }
 
     @Transactional
@@ -73,10 +72,9 @@ public class CartService {
 
         CartItem item = findCartItemOrThrow(cart, product);
         item.setQuantity(quantity);
-        cartItemRepository.save(item);
 
         logCartAction(user, anonymousId, "Updated quantity of product " + productId);
-        return updateCartTimestamp(cart);
+        return cart;
     }
 
     @Transactional
@@ -85,18 +83,29 @@ public class CartService {
         Product product = productService.getExistingProduct(productId);
 
         CartItem item = findCartItemOrThrow(cart, product);
-        cartItemRepository.delete(item);
+        cart.getItems().remove(item);
 
         logCartAction(user, anonymousId, "Removed product " + productId);
-        return updateCartTimestamp(cart);
+        return cart;
     }
+
+    @Transactional
+    public void clearCart(String anonymousId, User user) {
+        Optional<Cart> optionalCart = user != null
+                ? findCurrentCart(user)
+                : findCurrentCart(anonymousId);
+
+        optionalCart.ifPresent(cart -> {
+            cart.getItems().clear();
+            logCartAction(user, anonymousId, "Cart cleared");
+        });
+    }
+
 
     private Cart createNewCart(User user) {
         Cart newCart = Cart.builder()
                 .user(user)
                 .checkedOut(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .items(new ArrayList<>())
                 .build();
         logCartAction(user, null, "Created new cart");
@@ -107,8 +116,6 @@ public class CartService {
         Cart newCart = Cart.builder()
                 .anonymousId(anonymousId)
                 .checkedOut(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .items(new ArrayList<>())
                 .build();
         logCartAction(null, anonymousId, "Created new anonymous cart");
@@ -124,8 +131,8 @@ public class CartService {
 
     private void updateExistingCartItem(CartItem item, int quantityToAdd) {
         item.setQuantity(item.getQuantity() + quantityToAdd);
-        cartItemRepository.save(item);
     }
+
 
     private void addNewCartItem(Cart cart, Product product, int quantity) {
         CartItem newItem = CartItem.builder()
@@ -133,18 +140,13 @@ public class CartService {
                 .product(product)
                 .quantity(quantity)
                 .build();
-        cartItemRepository.save(newItem);
+
         cart.getItems().add(newItem);
     }
 
     private CartItem findCartItemOrThrow(Cart cart, Product product) {
         return cartItemRepository.findByCartAndProduct(cart, product)
                 .orElseThrow(() -> new CartItemNotFoundException(product.getId()));
-    }
-
-    private Cart updateCartTimestamp(Cart cart) {
-        cart.setUpdatedAt(LocalDateTime.now());
-        return cartRepository.save(cart);
     }
 
     private void logCartAction(User user, String anonymousId, String action) {
@@ -168,7 +170,7 @@ public class CartService {
         Optional<Cart> userCartOpt = cartRepository.findByUserAndCheckedOutFalse(user);
 
         if (anonymousCartOpt.isEmpty()) {
-            // Usuário não tem carrinho, criar um novo
+
             userCartOpt.orElseGet(() -> createNewCart(user));
             return;
         }
@@ -176,7 +178,7 @@ public class CartService {
         Cart anonymousCart = anonymousCartOpt.get();
 
         if (userCartOpt.isEmpty()) {
-            // Vincula o carrinho anônimo ao usuário
+
             anonymousCart.setUser(user);
             anonymousCart.setAnonymousId(null);
             cartRepository.save(anonymousCart);
@@ -195,12 +197,12 @@ public class CartService {
             Long productId = anonItem.getProduct().getId();
 
             if (userItemMap.containsKey(productId)) {
-                // Item já existe no carrinho do usuário → soma a quantidade
+
                 CartItem existingItem = userItemMap.get(productId);
                 existingItem.setQuantity(existingItem.getQuantity() + anonItem.getQuantity());
                 cartItemRepository.save(existingItem);
             } else {
-                // Item não existe → adiciona novo item
+
                 CartItem newItem = CartItem.builder()
                         .cart(userCart)
                         .product(anonItem.getProduct())
@@ -211,7 +213,6 @@ public class CartService {
             }
         }
 
-        // Remove carrinho anônimo do banco
         cartRepository.delete(anonymousCart);
     }
 }
