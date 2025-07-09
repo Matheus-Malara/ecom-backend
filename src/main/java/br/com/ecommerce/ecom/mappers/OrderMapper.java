@@ -16,7 +16,15 @@ public interface OrderMapper {
     OrderResponseDTO toResponseDTO(Order order);
 
     @Mapping(source = "product.name", target = "productName")
+    @Mapping(target = "imageUrl", expression = "java(getFirstImageUrl(item))")
     OrderItemDTO toItemDTO(OrderItem item);
 
     List<OrderItemDTO> toItemDTOList(List<OrderItem> items);
+
+    default String getFirstImageUrl(OrderItem item) {
+        if (item.getProduct() != null && !item.getProduct().getImages().isEmpty()) {
+            return item.getProduct().getImages().getFirst().getImageUrl();
+        }
+        return null;
+    }
 }

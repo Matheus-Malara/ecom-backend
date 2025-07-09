@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3-create-partial-unique-indexes-on-carts
+      author: Matheus
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DROP INDEX IF EXISTS uk_user_active_cart;
+              
+              CREATE UNIQUE INDEX IF NOT EXISTS uk_user_active_cart 
+              ON carts(user_id) 
+              WHERE checked_out = false AND user_id IS NOT NULL;
+
+              CREATE UNIQUE INDEX IF NOT EXISTS uk_anon_active_cart 
+              ON carts(anonymous_id) 
+              WHERE checked_out = false AND anonymous_id IS NOT NULL;

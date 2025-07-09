@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/db.changelog-1-add-anonymous-id-to-carts.yaml
   - include:
       file: db/changelog/db.changelog-2-make-user-id-nullable.yaml
+  - include:
+      file: db/changelog/db.changelog-3-create-partial-unique-indexes-on-carts.yaml

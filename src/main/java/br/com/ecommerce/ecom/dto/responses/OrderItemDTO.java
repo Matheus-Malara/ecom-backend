@@ -19,4 +19,7 @@ public class OrderItemDTO {
 
     @Schema(description = "Price per unit at the time of purchase", example = "89.90")
     private BigDecimal pricePerUnit;
+
+    @Schema(description = "Image URL from original product", example = "https://cdn.example.com/images/whey.jpg")
+    private String imageUrl;
 }
