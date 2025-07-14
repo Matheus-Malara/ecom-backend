@@ -15,6 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ProductMapperTest {
@@ -52,6 +53,7 @@ class ProductMapperTest {
 
         Product product = Product.builder()
                 .id(100L)
+
                 .name("Whey Protein")
                 .description("High-quality protein for muscle growth.")
                 .category(category)
@@ -67,6 +69,8 @@ class ProductMapperTest {
         ProductResponseDTO dto = productMapper.toResponseDTO(product);
 
         assertEquals(100L, dto.getId());
+        assertEquals(1L, dto.getCategoryId());
+        assertEquals(2L, dto.getBrandId());
         assertEquals("Whey Protein", dto.getName());
         assertEquals("High-quality protein for muscle growth.", dto.getDescription());
         assertEquals("Supplements", dto.getCategoryName());
@@ -116,6 +120,8 @@ class ProductMapperTest {
         assertEquals("Isolate Protein", dto.getName());
         assertEquals("Isolates", dto.getCategoryName());
         assertEquals("Black Skull", dto.getBrandName());
+        assertNull(dto.getCategoryId());
+        assertNull(dto.getBrandId());
         assertNotNull(dto.getImages());
         assertTrue(dto.getImages().isEmpty());
     }

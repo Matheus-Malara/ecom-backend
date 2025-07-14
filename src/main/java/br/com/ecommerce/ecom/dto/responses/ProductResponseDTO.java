@@ -19,8 +19,14 @@ public class ProductResponseDTO {
     @Schema(description = "Description of the product", example = "High quality whey protein with 25g per dose")
     private String description;
 
+    @Schema(description = "ID of the category", example = "10")
+    private Long categoryId;
+
     @Schema(description = "Category name", example = "Supplements")
     private String categoryName;
+
+    @Schema(description = "ID of the brand", example = "5")
+    private Long brandId;
 
     @Schema(description = "Brand name", example = "Growth")
     private String brandName;

@@ -14,13 +14,13 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
-    // Entity → ResponseDTO
+    @Mapping(source = "category.id", target = "categoryId")
+    @Mapping(source = "brand.id", target = "brandId")
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "images", target = "images", qualifiedByName = "mapImages")
     ProductResponseDTO toResponseDTO(Product entity);
 
-    // Map imagens → DTO completo
     @Named("mapImages")
     default List<ProductImageResponseDTO> mapImages(List<ProductImage> images) {
         if (images == null) return List.of();
