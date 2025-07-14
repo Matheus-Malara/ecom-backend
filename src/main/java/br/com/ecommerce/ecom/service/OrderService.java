@@ -80,7 +80,6 @@ public class OrderService {
                 .totalAmount(total)
                 .status(OrderStatus.PENDING)
                 .createdAt(now)
-                .updatedAt(now)
                 .build();
 
         order.setItems(orderItems);
@@ -100,7 +99,6 @@ public class OrderService {
         validateTransition(order.getStatus(), newStatus);
 
         order.setStatus(newStatus);
-        order.setUpdatedAt(LocalDateTime.now());
 
         log.info("Order {} status changed from {} to {}", order.getId(), order.getStatus(), newStatus);
 
@@ -143,7 +141,6 @@ public class OrderService {
             throw new InvalidOrderStatusException("You can only cancel orders that are PENDING or PAID.");
         }
         order.setStatus(OrderStatus.CANCELLED);
-        order.setUpdatedAt(LocalDateTime.now());
         return orderRepository.save(order);
     }
 }
