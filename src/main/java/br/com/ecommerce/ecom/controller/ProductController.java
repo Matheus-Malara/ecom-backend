@@ -2,6 +2,7 @@ package br.com.ecommerce.ecom.controller;
 
 import br.com.ecommerce.ecom.dto.filters.ProductFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.ProductRequestDTO;
+import br.com.ecommerce.ecom.dto.requests.ProductWithImageRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductImageResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.StandardResponse;
@@ -18,9 +19,11 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,11 +46,11 @@ public class ProductController {
     private final ProductService productService;
     private final ResponseFactory responseFactory;
 
-    @Operation(summary = "Create a new product", description = "Creates a new product and returns the created entity.")
+    @Operation(summary = "Create a new product", description = "Creates a new product and returns the created entity with optional image upload.")
     @ApiResponse(responseCode = "201", description = "Product created successfully")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StandardResponse<ProductResponseDTO>> createProduct(
-            @RequestBody @Valid ProductRequestDTO dto) {
+            @ModelAttribute @Valid ProductWithImageRequestDTO dto) throws IOException {
         ProductResponseDTO response = productService.createProduct(dto);
         return responseFactory.createdResponse(response, "Product created successfully", PRODUCT_BASE_PATH);
     }
