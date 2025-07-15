@@ -31,7 +31,7 @@ public class ProductSpecification {
             }
 
             if (filter.getFlavor() != null && !filter.getFlavor().isBlank()) {
-                predicates.add(cb.equal(cb.lower(root.get("flavor")), filter.getFlavor().toLowerCase()));
+                predicates.add(cb.like(cb.lower(root.get("flavor")), "%" + filter.getFlavor().toLowerCase() + "%"));
             }
 
             if (filter.getMinPrice() != null) {

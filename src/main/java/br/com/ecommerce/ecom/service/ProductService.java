@@ -2,6 +2,7 @@ package br.com.ecommerce.ecom.service;
 
 import br.com.ecommerce.ecom.dto.filters.ProductFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.ProductRequestDTO;
+import br.com.ecommerce.ecom.dto.requests.ProductWithImageRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductImageResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.ProductResponseDTO;
 import br.com.ecommerce.ecom.entity.Brand;
@@ -25,9 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -43,7 +41,7 @@ public class ProductService {
 
 
     @Transactional
-    public ProductResponseDTO createProduct(ProductRequestDTO dto) {
+    public ProductResponseDTO createProduct(ProductWithImageRequestDTO dto) throws IOException {
         log.info("Creating product with name: {}", dto.getName());
 
         Category category = categoryService.getExistingCategory(dto.getCategoryId());
@@ -61,12 +59,14 @@ public class ProductService {
                 .active(true)
                 .build();
 
-        List<ProductImage> images = convertToProductImages(dto.getImageUrls(), product);
-        product.setImages(images);
+        product = productRepository.save(product);
 
-        Product savedProduct = productRepository.save(product);
-        log.info("Product '{}' created successfully with ID: {}", savedProduct.getName(), savedProduct.getId());
-        return productMapper.toResponseDTO(savedProduct);
+        if (dto.getImage() != null && !dto.getImage().isEmpty()) {
+            uploadImage(product.getId(), dto.getImage());
+        }
+
+        log.info("Product '{}' created successfully with ID: {}", product.getName(), product.getId());
+        return productMapper.toResponseDTO(product);
     }
 
     @Transactional
@@ -143,10 +143,6 @@ public class ProductService {
         product.setWeightGrams(dto.getWeightGrams());
         product.setFlavor(dto.getFlavor());
 
-        product.getImages().clear();
-        List<ProductImage> images = convertToProductImages(dto.getImageUrls(), product);
-        product.getImages().addAll(images);
-
         Product updatedProduct = productRepository.save(product);
         log.info("Product with ID {} updated successfully", id);
         return productMapper.toResponseDTO(updatedProduct);
@@ -170,18 +166,6 @@ public class ProductService {
     }
 
     // ========= Helpers =========
-
-    private List<ProductImage> convertToProductImages(List<String> imageUrls, Product product) {
-        AtomicInteger index = new AtomicInteger(0);
-        return imageUrls.stream()
-                .distinct()
-                .map(url -> ProductImage.builder()
-                        .imageUrl(url)
-                        .product(product)
-                        .displayOrder(index.getAndIncrement())
-                        .build())
-                .collect(Collectors.toList());
-    }
 
     public Product getExistingProduct(Long id) {
         return productRepository.findById(id)
