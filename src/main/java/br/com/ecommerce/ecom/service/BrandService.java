@@ -2,6 +2,7 @@ package br.com.ecommerce.ecom.service;
 
 import br.com.ecommerce.ecom.dto.filters.BrandFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.BrandRequestDTO;
+import br.com.ecommerce.ecom.dto.requests.BrandWithImageRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.BrandResponseDTO;
 import br.com.ecommerce.ecom.entity.Brand;
 import br.com.ecommerce.ecom.enums.UploadType;
@@ -31,16 +32,26 @@ public class BrandService {
     private final S3Service s3Service;
 
     @Transactional
-    public BrandResponseDTO createBrand(BrandRequestDTO dto) {
+    public BrandResponseDTO createBrand(BrandWithImageRequestDTO dto) throws IOException {
         log.info("Creating brand with name: {}", dto.getName());
         validateBrandyNameUniqueness(dto.getName());
 
-        Brand brand = brandMapper.toEntity(dto);
-        Brand savedBrand = brandRepository.save(brand);
+        Brand brand = Brand.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .active(true)
+                .build();
 
-        log.info("Brand created successfully with ID: {}", savedBrand.getId());
-        return brandMapper.toResponseDTO(savedBrand);
+        brand = brandRepository.save(brand);
+
+        if (dto.getImage() != null && !dto.getImage().isEmpty()) {
+            brand = uploadImageInternal(brand, dto.getImage(), brand.getId());
+        }
+
+        log.info("Brand '{}' created successfully with ID: {}", brand.getName(), brand.getId());
+        return brandMapper.toResponseDTO(brand);
     }
+
 
     @Transactional
     public BrandResponseDTO uploadImage(Long brandId, MultipartFile file) throws IOException {
@@ -51,9 +62,7 @@ public class BrandService {
             s3Service.deleteFile(previousKey);
         }
 
-        String logoUrl = s3Service.uploadFile(file, UploadType.BRANDS, brandId, brand.getName());
-        brand.setLogoUrl(logoUrl);
-        brandRepository.save(brand);
+        brand = uploadImageInternal(brand, file, brand.getId());
 
         log.info("Replaced logo for brand ID {}", brandId);
         return brandMapper.toResponseDTO(brand);
@@ -133,4 +142,11 @@ public class BrandService {
             throw new DuplicateBrandNameException(brandName);
         }
     }
+
+    private Brand uploadImageInternal(Brand brand, MultipartFile file, Long brandId) throws IOException {
+        String logoUrl = s3Service.uploadFile(file, UploadType.BRANDS, brandId, brand.getName());
+        brand.setLogoUrl(logoUrl);
+        return brandRepository.save(brand);
+    }
+
 }
