@@ -2,6 +2,7 @@ package br.com.ecommerce.ecom.controller;
 
 import br.com.ecommerce.ecom.dto.filters.BrandFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.BrandRequestDTO;
+import br.com.ecommerce.ecom.dto.requests.BrandWithImageRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.BrandResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.StandardResponse;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
@@ -19,9 +20,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,18 +48,19 @@ public class BrandController {
     private final BrandService brandService;
     private final ResponseFactory responseFactory;
 
+
     @Operation(
             summary = "Create a new brand",
-            description = "Creates a brand and returns the created resource with its generated ID."
+            description = "Creates a brand with optional image upload"
     )
     @ApiResponse(
             responseCode = "201",
             description = "Brand successfully created",
             content = @Content(schema = @Schema(implementation = StandardResponse.class))
     )
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StandardResponse<BrandResponseDTO>> createBrand(
-            @RequestBody @Valid BrandRequestDTO dto) {
+            @ModelAttribute @Valid BrandWithImageRequestDTO dto) throws IOException {
 
         BrandResponseDTO response = brandService.createBrand(dto);
         return responseFactory.createdResponse(
