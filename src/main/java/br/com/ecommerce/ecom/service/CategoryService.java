@@ -2,6 +2,7 @@ package br.com.ecommerce.ecom.service;
 
 import br.com.ecommerce.ecom.dto.filters.CategoryFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.CategoryRequestDTO;
+import br.com.ecommerce.ecom.dto.requests.CategoryWithImageRequestDTO;
 import br.com.ecommerce.ecom.dto.responses.CategoryResponseDTO;
 import br.com.ecommerce.ecom.entity.Category;
 import br.com.ecommerce.ecom.enums.UploadType;
@@ -31,16 +32,26 @@ public class CategoryService {
     private final S3Service s3Service;
 
     @Transactional
-    public CategoryResponseDTO createCategory(CategoryRequestDTO dto) {
+    public CategoryResponseDTO createCategory(CategoryWithImageRequestDTO dto) throws IOException {
         log.info("Creating category with name: {}", dto.getName());
         validateCategoryNameUniqueness(dto.getName());
 
-        Category category = categoryMapper.toEntity(dto);
-        Category savedCategory = categoryRepository.save(category);
+        Category category = Category.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .active(true)
+                .build();
 
-        log.info("Category created successfully with ID: {}", savedCategory.getId());
-        return categoryMapper.toResponseDTO(savedCategory);
+        category = categoryRepository.save(category);
+
+        if (dto.getImage() != null && !dto.getImage().isEmpty()) {
+            category = uploadImageInternal(category, dto.getImage(), category.getId());
+        }
+
+        log.info("Category '{}' created successfully with ID: {}", category.getName(), category.getId());
+        return categoryMapper.toResponseDTO(category);
     }
+
 
     @Transactional
     public CategoryResponseDTO uploadImage(Long categoryId, MultipartFile file) throws IOException {
@@ -51,9 +62,7 @@ public class CategoryService {
             s3Service.deleteFile(previousKey);
         }
 
-        String newImageUrl = s3Service.uploadFile(file, UploadType.CATEGORIES, categoryId, category.getName());
-        category.setImageUrl(newImageUrl);
-        categoryRepository.save(category);
+        uploadImageInternal(category, file, categoryId);
 
         log.info("Replaced category image for ID {} with new image", categoryId);
         return categoryMapper.toResponseDTO(category);
@@ -132,5 +141,11 @@ public class CategoryService {
             log.warn("Category name '{}' already exists", categoryName);
             throw new DuplicateCategoryNameException(categoryName);
         }
+    }
+
+    private Category uploadImageInternal(Category category, MultipartFile file, Long categoryId) throws IOException {
+        String imageUrl = s3Service.uploadFile(file, UploadType.CATEGORIES, categoryId, category.getName());
+        category.setImageUrl(imageUrl);
+        return categoryRepository.save(category);
     }
 }
