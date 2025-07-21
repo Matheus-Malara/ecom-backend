@@ -81,4 +81,8 @@ public class LocalUserService {
     private String getCurrentKeycloakUserId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
+
+    public long getUserCount() {
+        return userRepository.count();
+    }
 }

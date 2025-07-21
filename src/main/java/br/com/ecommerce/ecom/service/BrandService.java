@@ -126,6 +126,10 @@ public class BrandService {
         log.info("Brand ID {} status updated to {}", id, active);
     }
 
+    public long getBrandCount() {
+        return brandRepository.count();
+    }
+
     // ========= Helpers =========
 
     public Brand getExistingBrand(Long id) {

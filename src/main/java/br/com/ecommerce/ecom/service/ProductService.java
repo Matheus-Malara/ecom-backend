@@ -165,6 +165,10 @@ public class ProductService {
         log.info("Product ID {} status updated to {}", id, active);
     }
 
+    public long getProductCount() {
+        return productRepository.count();
+    }
+
     // ========= Helpers =========
 
     public Product getExistingProduct(Long id) {

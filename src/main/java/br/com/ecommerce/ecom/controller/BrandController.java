@@ -209,4 +209,17 @@ public class BrandController {
                 BRAND_BASE_PATH + "/" + id + "/status"
         );
     }
+
+    @Operation(summary = "Get total brand count", description = "Returns the total number of brands in the system")
+    @ApiResponse(responseCode = "200", description = "Brand count retrieved successfully")
+    @GetMapping("/count")
+    public ResponseEntity<StandardResponse<Long>> getBrandCount() {
+        long count = brandService.getBrandCount();
+        return responseFactory.okResponse(
+                count,
+                "Brand count retrieved successfully",
+                BRAND_BASE_PATH + "/count"
+        );
+    }
+
 }
