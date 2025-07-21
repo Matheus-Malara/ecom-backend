@@ -45,7 +45,6 @@ public class AdminOrderController {
         return responseFactory.okResponse(response, "Orders fetched successfully", ADMIN_ORDERS_BASE_PATH);
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<StandardResponse<OrderResponseDTO>> getOrder(@PathVariable Long id) {
         Order order = orderService.getOrderById(id);
@@ -60,5 +59,15 @@ public class AdminOrderController {
         Order order = orderService.updateOrderStatus(id, dto.getStatus());
         OrderResponseDTO response = orderMapper.toResponseDTO(order);
         return responseFactory.okResponse(response, "Order status updated", ADMIN_ORDERS_BASE_PATH + id);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<StandardResponse<Long>> getOrderCount() {
+        long count = orderService.getOrderCount();
+        return responseFactory.okResponse(
+                count,
+                "Order count retrieved successfully",
+                ADMIN_ORDERS_BASE_PATH + "/count"
+        );
     }
 }

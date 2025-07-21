@@ -51,4 +51,15 @@ public class UserController {
         String message = request.isActive() ? "User activated" : "User deactivated";
         return responseFactory.okResponse(null, message, ACCOUNT_BASE_PATH + "/" + email + "/status");
     }
+
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StandardResponse<Long>> getUserCount() {
+        long count = userService.getUserCount();
+        return responseFactory.okResponse(
+                count,
+                "User count retrieved successfully",
+                "/api/users/count"
+        );
+    }
 }

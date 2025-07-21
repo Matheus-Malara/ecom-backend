@@ -122,4 +122,17 @@ public class ProductController {
         productService.updateProductStatus(id, active);
         return responseFactory.okResponse(null, "Product status updated", PRODUCT_BASE_PATH + "/" + id + "/status");
     }
+
+    @Operation(summary = "Get total product count", description = "Returns the total number of products in the system")
+    @ApiResponse(responseCode = "200", description = "Product count retrieved successfully")
+    @GetMapping("/count")
+    public ResponseEntity<StandardResponse<Long>> getProductCount() {
+        long count = productService.getProductCount();
+        return responseFactory.okResponse(
+                count,
+                "Product count retrieved successfully",
+                PRODUCT_BASE_PATH + "/count"
+        );
+    }
+
 }

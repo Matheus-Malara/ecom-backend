@@ -125,6 +125,10 @@ public class CategoryService {
         log.info("Category ID {} status updated to {}", id, active);
     }
 
+    public long getCategoryCount() {
+        return categoryRepository.count();
+    }
+
     // ========= Helpers =========
 
 

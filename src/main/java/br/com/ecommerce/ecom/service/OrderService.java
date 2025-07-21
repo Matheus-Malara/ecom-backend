@@ -143,4 +143,8 @@ public class OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         return orderRepository.save(order);
     }
+
+    public long getOrderCount() {
+        return orderRepository.count();
+    }
 }

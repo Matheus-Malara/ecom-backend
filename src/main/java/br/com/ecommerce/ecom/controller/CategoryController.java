@@ -169,4 +169,17 @@ public class CategoryController {
         categoryService.updateCategoryStatus(id, active);
         return responseFactory.okResponse(null, "Category status updated", CATEGORY_BASE_PATH + "/" + id + "/status");
     }
+
+    @Operation(summary = "Get total category count", description = "Returns the total number of categories in the system")
+    @ApiResponse(responseCode = "200", description = "Category count retrieved successfully")
+    @GetMapping("/count")
+    public ResponseEntity<StandardResponse<Long>> getCategoryCount() {
+        long count = categoryService.getCategoryCount();
+        return responseFactory.okResponse(
+                count,
+                "Category count retrieved successfully",
+                CATEGORY_BASE_PATH + "/count"
+        );
+    }
+
 }
