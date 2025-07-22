@@ -1,7 +1,9 @@
 package br.com.ecommerce.ecom.service;
 
 import br.com.ecommerce.ecom.client.feign.keycloack.KeycloakUserClient;
+import br.com.ecommerce.ecom.dto.filters.UserFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.UpdateUserRequestDTO;
+import br.com.ecommerce.ecom.dto.responses.CompleteUserResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.UserResponseDTO;
 import br.com.ecommerce.ecom.entity.User;
 import br.com.ecommerce.ecom.exception.UserNotFoundException;
@@ -9,9 +11,13 @@ import br.com.ecommerce.ecom.mappers.UserMapper;
 import br.com.ecommerce.ecom.model.keycloack.UserRepresentation;
 import br.com.ecommerce.ecom.repository.UserRepository;
 import br.com.ecommerce.ecom.service.keycloack.KeycloakTokenService;
+import br.com.ecommerce.ecom.specification.UserSpecification;
 import br.com.ecommerce.ecom.util.TraceIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,4 +91,17 @@ public class LocalUserService {
     public long getUserCount() {
         return userRepository.count();
     }
+
+    public CompleteUserResponseDTO getUserById(Long id) {
+        return userRepository.findById(id)
+                .map(userMapper::toCompleteUserResponse)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    public Page<CompleteUserResponseDTO> getUsers(UserFilterDTO filter, Pageable pageable) {
+        Specification<User> spec = UserSpecification.build(filter);
+        return userRepository.findAll(spec, pageable)
+                .map(userMapper::toCompleteUserResponse);
+    }
+
 }

@@ -1,16 +1,23 @@
 package br.com.ecommerce.ecom.controller;
 
+import br.com.ecommerce.ecom.dto.filters.UserFilterDTO;
 import br.com.ecommerce.ecom.dto.requests.UpdateUserRequestDTO;
 import br.com.ecommerce.ecom.dto.requests.UpdateUserStatusRequest;
+import br.com.ecommerce.ecom.dto.responses.CompleteUserResponseDTO;
 import br.com.ecommerce.ecom.dto.responses.StandardResponse;
 import br.com.ecommerce.ecom.dto.responses.UserResponseDTO;
 import br.com.ecommerce.ecom.factory.ResponseFactory;
 import br.com.ecommerce.ecom.service.LocalUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserController {
 
-    private static final String ACCOUNT_BASE_PATH = "/api/account";
+    private static final String USERS_BASE_PATH = "/api/users";
 
     private final LocalUserService userService;
     private final ResponseFactory responseFactory;
@@ -31,14 +38,14 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<StandardResponse<UserResponseDTO>> getCurrentUser() {
         UserResponseDTO dto = userService.getCurrentUserInfo();
-        return responseFactory.okResponse(dto, "User info fetched", ACCOUNT_BASE_PATH + "/me");
+        return responseFactory.okResponse(dto, "User info fetched", USERS_BASE_PATH + "/me");
     }
 
     @PutMapping("/me")
     public ResponseEntity<StandardResponse<UserResponseDTO>> updateCurrentUser(
             @RequestBody @Valid UpdateUserRequestDTO dto) {
         UserResponseDTO updated = userService.updateCurrentUser(dto);
-        return responseFactory.okResponse(updated, "User info updated", ACCOUNT_BASE_PATH + "/me");
+        return responseFactory.okResponse(updated, "User info updated", USERS_BASE_PATH + "/me");
     }
 
     @PatchMapping("/{email}/status")
@@ -49,7 +56,7 @@ public class UserController {
 
         userService.updateUserStatusByEmail(email, request.isActive());
         String message = request.isActive() ? "User activated" : "User deactivated";
-        return responseFactory.okResponse(null, message, ACCOUNT_BASE_PATH + "/" + email + "/status");
+        return responseFactory.okResponse(null, message, USERS_BASE_PATH + "/" + email + "/status");
     }
 
     @GetMapping("/count")
@@ -59,7 +66,24 @@ public class UserController {
         return responseFactory.okResponse(
                 count,
                 "User count retrieved successfully",
-                "/api/users/count"
+                USERS_BASE_PATH
         );
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StandardResponse<CompleteUserResponseDTO>> getUserById(@PathVariable Long id) {
+        CompleteUserResponseDTO dto = userService.getUserById(id);
+        return responseFactory.okResponse(dto, "User fetched successfully", USERS_BASE_PATH + "/" + id);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StandardResponse<Page<CompleteUserResponseDTO>>> getUsers(
+            @Valid @ModelAttribute UserFilterDTO filter,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<CompleteUserResponseDTO> result = userService.getUsers(filter, pageable);
+        return responseFactory.okResponse(result, "Users fetched successfully", USERS_BASE_PATH);
     }
 }
