@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -39,6 +40,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
+@Tag(name = "Products", description = "Endpoints for managing products")
 public class ProductController {
 
     public static final String PRODUCT_BASE_PATH = "/api/products";
@@ -56,9 +58,11 @@ public class ProductController {
     }
 
     @Operation(summary = "Upload product image", description = "Uploads an image for the specified product.")
-    @PostMapping("/{id}/upload-image")
+    @ApiResponse(responseCode = "200", description = "Image uploaded successfully")
+    @PostMapping(path = "/{id}/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StandardResponse<ProductImageResponseDTO>> uploadProductImage(
             @Parameter(description = "Product ID", example = "1") @PathVariable Long id,
+            @Parameter(description = "Image file", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             @RequestParam("file") MultipartFile file) throws IOException {
 
         ProductImageResponseDTO response = productService.uploadImage(id, file);
@@ -66,6 +70,7 @@ public class ProductController {
     }
 
     @Operation(summary = "Get filtered products", description = "Returns a paginated and filtered list of products.")
+    @ApiResponse(responseCode = "200", description = "Products fetched successfully")
     @GetMapping
     public ResponseEntity<StandardResponse<Page<ProductResponseDTO>>> getProductFiltered(
             @ParameterObject @Valid ProductFilterDTO filter,
@@ -88,6 +93,7 @@ public class ProductController {
     }
 
     @Operation(summary = "Update product", description = "Updates an existing product by ID.")
+    @ApiResponse(responseCode = "200", description = "Product updated successfully")
     @PutMapping("/{id}")
     public ResponseEntity<StandardResponse<ProductResponseDTO>> updateProduct(
             @Parameter(description = "Product ID", example = "1") @PathVariable Long id,
@@ -97,6 +103,7 @@ public class ProductController {
     }
 
     @Operation(summary = "Delete product", description = "Deletes a product by its ID.")
+    @ApiResponse(responseCode = "204", description = "Product deleted successfully")
     @DeleteMapping("/{id}")
     public ResponseEntity<StandardResponse<Void>> deleteProduct(
             @Parameter(description = "Product ID", example = "1") @PathVariable Long id) {
@@ -105,16 +112,18 @@ public class ProductController {
     }
 
     @Operation(summary = "Delete product image", description = "Removes an image from a product and deletes it from S3.")
+    @ApiResponse(responseCode = "204", description = "Image deleted successfully")
     @DeleteMapping("/{productId}/images/{imageId}")
     public ResponseEntity<StandardResponse<Void>> deleteProductImage(
-            @PathVariable Long productId,
-            @PathVariable Long imageId) {
+            @Parameter(description = "Product ID", example = "1") @PathVariable Long productId,
+            @Parameter(description = "Image ID", example = "10") @PathVariable Long imageId) {
 
         productService.deleteProductImage(productId, imageId);
         return responseFactory.noContentResponse("Image deleted successfully", PRODUCT_BASE_PATH + "/" + productId + "/images/" + imageId);
     }
 
     @Operation(summary = "Update product status", description = "Activates or deactivates a product.")
+    @ApiResponse(responseCode = "200", description = "Product status updated")
     @PatchMapping("/{id}/status")
     public ResponseEntity<StandardResponse<Void>> updateProductStatus(
             @Parameter(description = "Product ID", example = "1") @PathVariable Long id,
@@ -134,5 +143,4 @@ public class ProductController {
                 PRODUCT_BASE_PATH + "/count"
         );
     }
-
 }

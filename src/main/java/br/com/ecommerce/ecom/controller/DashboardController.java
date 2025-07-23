@@ -9,6 +9,10 @@ import br.com.ecommerce.ecom.service.LocalUserService;
 import br.com.ecommerce.ecom.service.OrderService;
 import br.com.ecommerce.ecom.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
+@Tag(name = "Dashboard", description = "Endpoints for admin dashboard insights and analytics")
 public class DashboardController {
 
     private static final String DASHBOARD_BASE_PATH = "/api/dashboard";
@@ -30,7 +35,15 @@ public class DashboardController {
     private final LocalUserService userService;
     private final ResponseFactory responseFactory;
 
-    @Operation(summary = "Get dashboard summary", description = "Returns total counts of products, brands, categories, orders, and users")
+    @Operation(
+            summary = "Get dashboard summary",
+            description = "Returns total counts of products, brands, categories, orders, and users"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Dashboard summary fetched successfully",
+            content = @Content(schema = @Schema(implementation = DashboardSummaryDTO.class))
+    )
     @GetMapping("/summary")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StandardResponse<DashboardSummaryDTO>> getDashboardSummary() {

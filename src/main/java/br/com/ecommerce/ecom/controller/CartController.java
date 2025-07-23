@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ import java.util.Optional;
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Cart", description = "Endpoints to manage shopping cart (authenticated or anonymous)")
 public class CartController {
 
     private static final String CART_BASE_PATH = "/api/cart";
@@ -47,10 +49,17 @@ public class CartController {
     private final CartMapper cartMapper;
 
     @Operation(summary = "Add item to cart", description = "Adds a product to the cart (authenticated or anonymous).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Item added successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content)
+    })
     @PostMapping("/items")
     public ResponseEntity<StandardResponse<CartResponseDTO>> addToCart(
+            @Parameter(description = "Anonymous cart ID (if user is not authenticated)", example = "anon-12345")
             @RequestHeader(value = "X-Anonymous-Id", required = false) String anonymousId,
+
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+
             @RequestBody @Valid AddToCartRequestDTO dto) {
 
         User user = jwt != null ? userService.getUserByEmail(jwt.getClaim("email")) : null;
@@ -60,9 +69,15 @@ public class CartController {
     }
 
     @Operation(summary = "Get current cart", description = "Retrieves the current cart for authenticated or anonymous users.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cart retrieved successfully"),
+            @ApiResponse(responseCode = "204", description = "Cart is empty", content = @Content)
+    })
     @GetMapping
     public ResponseEntity<StandardResponse<CartResponseDTO>> getCart(
+            @Parameter(description = "Anonymous cart ID (if user is not authenticated)", example = "anon-12345")
             @RequestHeader(value = "X-Anonymous-Id", required = false) String anonymousId,
+
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
 
         User user = jwt != null ? userService.getUserByEmail(jwt.getClaim("email")) : null;
@@ -79,11 +94,20 @@ public class CartController {
     }
 
     @Operation(summary = "Update cart item quantity", description = "Updates the quantity of a product in the cart.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Quantity updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid quantity or product not found", content = @Content)
+    })
     @PutMapping("/items/{productId}")
     public ResponseEntity<StandardResponse<CartResponseDTO>> updateQuantity(
+            @Parameter(description = "Anonymous cart ID (if user is not authenticated)", example = "anon-12345")
             @RequestHeader(value = "X-Anonymous-Id", required = false) String anonymousId,
+
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+
+            @Parameter(description = "ID of the product to update", example = "101")
             @PathVariable Long productId,
+
             @RequestBody @Valid UpdateQuantityDTO dto) {
 
         User user = jwt != null ? userService.getUserByEmail(jwt.getClaim("email")) : null;
@@ -93,10 +117,18 @@ public class CartController {
     }
 
     @Operation(summary = "Remove item from cart", description = "Removes a product from the cart.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Item removed successfully"),
+            @ApiResponse(responseCode = "404", description = "Item or cart not found", content = @Content)
+    })
     @DeleteMapping("/items/{productId}")
     public ResponseEntity<StandardResponse<CartResponseDTO>> removeFromCart(
+            @Parameter(description = "Anonymous cart ID (if user is not authenticated)", example = "anon-12345")
             @RequestHeader(value = "X-Anonymous-Id", required = false) String anonymousId,
+
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+
+            @Parameter(description = "ID of the product to remove", example = "101")
             @PathVariable Long productId) {
 
         User user = jwt != null ? userService.getUserByEmail(jwt.getClaim("email")) : null;
@@ -105,22 +137,20 @@ public class CartController {
         return responseFactory.okResponse(response, "Item removed from cart", CART_BASE_PATH + "/items/" + productId);
     }
 
-    @Operation(
-            summary = "Clear cart",
-            description = "Removes all items from the cart for authenticated or anonymous users."
-    )
+    @Operation(summary = "Clear cart", description = "Removes all items from the cart for authenticated or anonymous users.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Cart cleared successfully"),
             @ApiResponse(responseCode = "404", description = "Cart not found", content = @Content)
     })
     @DeleteMapping
     public ResponseEntity<StandardResponse<Void>> clearCart(
+            @Parameter(description = "Anonymous cart ID (if user is not authenticated)", example = "anon-12345")
             @RequestHeader(value = "X-Anonymous-Id", required = false) String anonymousId,
+
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
 
         User user = jwt != null ? userService.getUserByEmail(jwt.getClaim("email")) : null;
         cartService.clearCart(anonymousId, user);
         return responseFactory.noContentResponse("Cart cleared", CART_BASE_PATH);
     }
-
 }
