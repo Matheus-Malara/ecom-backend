@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -40,6 +41,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
+@Tag(name = "Categories", description = "Endpoints for managing product categories")
 public class CategoryController {
 
     public static final String CATEGORY_BASE_PATH = "/api/categories";
@@ -61,25 +63,24 @@ public class CategoryController {
         );
     }
 
-
     @Operation(
             summary = "Upload category image",
-            description = "Uploads an image to S3 and saves the imageUrl for the specified category"
+            description = "Uploads an image to S3 and updates the category's imageUrl"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Image uploaded successfully"),
-            @ApiResponse(responseCode = "404", description = "Category not found", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Invalid file", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Invalid file", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Category not found", content = @Content)
     })
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<StandardResponse<CategoryResponseDTO>> uploadCategoryImage(
             @Parameter(description = "Category ID", example = "1") @PathVariable Long id,
-            @Parameter(description = "Image file to upload") @RequestParam("file") MultipartFile file
+            @Parameter(description = "Image file", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestParam("file") MultipartFile file
     ) throws IOException {
         CategoryResponseDTO response = categoryService.uploadImage(id, file);
         return responseFactory.okResponse(response, "Image uploaded successfully", CATEGORY_BASE_PATH + "/" + id + "/upload-image");
     }
-
 
     @Operation(summary = "Get categories with filter and pagination", description = "Returns paginated and filtered list of categories.")
     @ApiResponses({
@@ -95,7 +96,6 @@ public class CategoryController {
         return responseFactory.okResponse(page, "All categories fetched", CATEGORY_BASE_PATH);
     }
 
-
     @Operation(summary = "Get category by ID", description = "Returns a category by its ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Category retrieved successfully"),
@@ -108,7 +108,6 @@ public class CategoryController {
         CategoryResponseDTO category = categoryService.getCategoryById(id);
         return responseFactory.okResponse(category, "Category retrieved successfully", CATEGORY_BASE_PATH + "/" + id);
     }
-
 
     @Operation(summary = "Update category", description = "Updates an existing category by ID.")
     @ApiResponses({
@@ -124,7 +123,6 @@ public class CategoryController {
         return responseFactory.okResponse(response, "Category updated successfully", CATEGORY_BASE_PATH + "/" + id);
     }
 
-
     @Operation(summary = "Delete category", description = "Deletes a category by ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Category deleted successfully"),
@@ -139,10 +137,9 @@ public class CategoryController {
         return responseFactory.noContentResponse("Category deleted successfully", CATEGORY_BASE_PATH + "/" + id);
     }
 
-
     @Operation(
             summary = "Delete category image",
-            description = "Deletes the category image from S3 and clears the imageUrl field"
+            description = "Deletes the category's image from S3 and clears the imageUrl field"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Image deleted successfully"),
@@ -151,10 +148,10 @@ public class CategoryController {
     @DeleteMapping("/{id}/image")
     public ResponseEntity<StandardResponse<Void>> deleteCategoryImage(
             @Parameter(description = "Category ID", example = "1") @PathVariable Long id) {
+
         categoryService.deleteImage(id);
         return responseFactory.noContentResponse("Category image deleted successfully", CATEGORY_BASE_PATH + "/" + id + "/image");
     }
-
 
     @Operation(summary = "Update category status", description = "Activates or deactivates a category.")
     @ApiResponses({
@@ -181,5 +178,4 @@ public class CategoryController {
                 CATEGORY_BASE_PATH + "/count"
         );
     }
-
 }

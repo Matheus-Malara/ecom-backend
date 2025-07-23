@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -41,13 +42,13 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/brands")
 @RequiredArgsConstructor
+@Tag(name = "Brands", description = "Endpoints for managing product brands")
 public class BrandController {
 
     public static final String BRAND_BASE_PATH = "/api/brands";
 
     private final BrandService brandService;
     private final ResponseFactory responseFactory;
-
 
     @Operation(
             summary = "Create a new brand",
@@ -56,7 +57,7 @@ public class BrandController {
     @ApiResponse(
             responseCode = "201",
             description = "Brand successfully created",
-            content = @Content(schema = @Schema(implementation = StandardResponse.class))
+            content = @Content(schema = @Schema(implementation = BrandResponseDTO.class))
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StandardResponse<BrandResponseDTO>> createBrand(
@@ -70,10 +71,9 @@ public class BrandController {
         );
     }
 
-
     @Operation(
             summary = "Upload brand logo",
-            description = "Uploads a new logo to S3 for the brand. If an logo already exists, it will be replaced."
+            description = "Uploads a new logo to S3 for the brand. If a logo already exists, it will be replaced."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Image uploaded successfully"),
@@ -82,12 +82,12 @@ public class BrandController {
     @PostMapping("/{id}/upload-logo")
     public ResponseEntity<StandardResponse<BrandResponseDTO>> uploadBrandImage(
             @Parameter(description = "Brand ID", example = "1") @PathVariable Long id,
-            @Parameter(description = "Image file") @RequestParam("file") MultipartFile file
+            @Parameter(description = "Image file", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestParam("file") MultipartFile file
     ) throws IOException {
         BrandResponseDTO response = brandService.uploadImage(id, file);
         return responseFactory.okResponse(response, "Image uploaded successfully", BRAND_BASE_PATH + "/" + id + "/logoUrl");
     }
-
 
     @Operation(
             summary = "List brands (paged + filters)",
@@ -110,7 +110,6 @@ public class BrandController {
         );
     }
 
-
     @Operation(
             summary = "Get brand by ID",
             description = "Returns a single brand by its identifier."
@@ -130,7 +129,6 @@ public class BrandController {
                 BRAND_BASE_PATH + "/" + id
         );
     }
-
 
     @Operation(
             summary = "Update brand",
@@ -153,7 +151,6 @@ public class BrandController {
         );
     }
 
-
     @Operation(
             summary = "Delete brand",
             description = "Deletes a brand by ID. This operation is irreversible."
@@ -171,7 +168,6 @@ public class BrandController {
         return responseFactory.noContentResponse("Brand deleted successfully", BRAND_BASE_PATH + "/" + id);
     }
 
-
     @Operation(
             summary = "Delete brand image",
             description = "Deletes the brand's image from S3 and clears the logoUrl"
@@ -187,7 +183,6 @@ public class BrandController {
         brandService.deleteImage(id);
         return responseFactory.noContentResponse("Brand image deleted successfully", BRAND_BASE_PATH + "/" + id + "/image");
     }
-
 
     @Operation(
             summary = "Toggle brand status",
@@ -221,5 +216,4 @@ public class BrandController {
                 BRAND_BASE_PATH + "/count"
         );
     }
-
 }
