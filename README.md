@@ -1,199 +1,197 @@
-# 🛒 Ecom Backend
+# Ecom Backend
 
-**Educational Project – Backend API for simple E-commerce**
-
-This is a backend-only simple e-commerce system built with **Java 21** and **Spring Boot 3.3.6**, developed as a learning project to practice API design, security, and architectural patterns using modern Java frameworks.  
-It supports authentication, product and cart management, order processing, DTO mapping, and basic role-based access control with `@PreAuthorize`.
+Spring Boot backend for **Ecom**, a complete e-commerce API built to practice real-world backend architecture using modern tools like Spring Security, Keycloak, AWS S3, Liquibase, and more.
 
 ---
 
-## 🚀 Features
+## 📌 Description
 
-### ✅ Authentication
-- JWT-based OAuth2 authentication using **Keycloak**
-- Role-based access with `@PreAuthorize` for protected endpoints
+This backend project powers a simple e-commerce system with user authentication, product management, shopping cart, checkout, and order tracking features.
 
-### 🛍️ Product, Category & Brand Management
-- CRUD operations for Products, Categories, and Brands
-- Products support:
-  - Multiple images
-  - Price, flavor, active status, timestamps
-  - Relations with Brand and Category
-- Product filtering and pagination via `ProductFilterDTO`
+It was built with a focus on learning clean architecture and applying best practices in Spring Boot projects, including:
+- Role-based access control (Keycloak + JWT)
+- RESTful architecture
+- API versioning and Swagger documentation
+- File upload to AWS S3
+- PostgreSQL + Liquibase for database migrations
+- DTO mapping with MapStruct
 
-### 🛒 Cart System
-- Each user has one active cart (`checkedOut = false`)
-- Supports:
-  - Add, update, and remove items
-  - Quantity handling
-  - Response via DTO (`CartResponseDTO`)
-- Prevents cart auto-creation on GET
+---
 
-### 🧾 Order System
-- Converts cart into `Order` with `OrderItems`
-- Endpoints for:
-  - User: list own orders with pagination
-  - Admin: list all orders, update order status
-- Order response formatted using DTOs
-
-### 📑 Pagination & Filters
-- Fully implemented for:
-  - Products
-  - Categories
-  - Brands
-  - Orders
-
-### 🔐 Role-based Access Control
-- Endpoints protected with `@PreAuthorize`
-- `USER` can manage own cart and orders
-- `ADMIN` can access management endpoints
-
-### 🧪 Unit Testing
-- Unit tests using **JUnit 5**
-- Currently focused on MapStruct mappers:
-  - ProductMapper
-  - CartMapper
-  - OrderMapper
-
-### 🧰 Back-end Tech Stack
+## 🚀 Technologies Used
 
 - Java 21
 - Spring Boot 3.3.6
-- Spring Security (OAuth2 Resource Server)
-- Spring Data JPA
-- Spring Validation
 - PostgreSQL
-- Feign Client (for future integrations)
-- MapStruct (`componentModel = "spring"`)
+- Liquibase
+- Spring Security + Keycloak (JWT)
+- Spring Data JPA
+- MapStruct
+- AWS S3 SDK (v2)
+- Feign Client (Keycloak Admin API)
+- Swagger (Springdoc OpenAPI)
 - JUnit 5
-- Lombok
-- Devtools
+- Gradle
+
+---
+
+## 🔐 Authentication & Authorization
+
+The project uses **Keycloak** for user authentication and authorization.
+
+- **JWT tokens** are used for secure access to protected endpoints
+- Roles:
+  - `USER` – can access public APIs and manage their cart/orders
+  - `ADMIN` – can manage all resources via `/api/admin/**`
+- Role-based restrictions are enforced via `@PreAuthorize("hasRole(...)")` annotations
+
+---
+
+## 📦 Features
+
+The backend includes:
+
+- ✅ Public product browsing
+- 👥 User and role management via Keycloak
+- 🛒 Cart and checkout system with Anonymous ID for gest carts
+- 📦 Order management with status control
+- 📂 Category and brand management
+- 🖼️ Product image uploads to **AWS S3**
+- 📑 API documentation via Swagger
+- 🔁 Pagination and filtering
+- 🧱 Liquibase for DB versioning
+
+---
+
+## 📘 API Documentation
+
+Access the full Swagger UI at:
+
+```
+http://localhost:8081/swagger-ui/index.html
+```
+
+---
+
+## 🧪 Testing
+
+This project includes unit tests for mappers using:
+
+- **JUnit 5**
+- **Spring Boot Test**
+
+Tests are located in the `src/test/java` directory.
+
+```bash
+./gradlew test
+```
 
 ---
 
 ## 📂 Project Structure
 
-src/
-├── main/
-│ ├── java/br/com/ecommerce/ecom/
-│ │ ├── client/
-│ │ ├── config/
-│ │ ├── controller/
-│ │ ├── dto/ (requests, responses, filters)
-│ │ ├── entity/
-│ │ ├── enums/
-│ │ ├── exception/
-│ │ ├── factory/
-│ │ ├── mapper/
-│ │ ├── model/
-│ │ ├── repository/
-│ │ ├── service/
-│ │ ├── specification/
-│ │ └── util/
-│ └── resources/
-│ └── application.properties
-└── test/
-└── java/br/com/ecommerce/ecom/mapper/
+```
+br.com.ecommerce.ecom
+├── config               // Security, Swagger, S3 and RestTemplate configs
+│   └── keycloak         // JWT converter
+├── controller           // API endpoints
+├── dto                  // DTOs for request, response, filters
+├── entity               // JPA entities (Product, User, Order, etc.)
+├── enums                // Domain enums
+├── exception            // Global exception handling
+├── factory              // Response Factory
+├── mappers              // MapStruct interfaces
+├── model.keycloak       // Feign models for Keycloak
+├── repository           // Spring Data JPA repositories
+├── service              // Business logic
+├── specification        // JPA Specifications for filtering
+├── util                 // Utilities
+└── EcomApplication      // Spring Boot main class
+```
 
 ---
 
-## 🛠️ Running Locally
+## 🔧 How to Run
 
-1. Clone the project
+### 1. Clone the repository
 
-   git clone https://github.com/Matheus-Malara/ecom-backend.git  
-   cd ecom-backend
+```bash
+git clone https://github.com/Matheus-Malara/ecom-backend.git
+cd ecom-backend
+```
 
-2. Configure environment
+### 2. Configure environment
 
-   Update `application.properties` with your PostgreSQL and Keycloak credentials.
+Create a file at `src/main/resources/application.properties`:
 
-   Example:
+```properties
+# Server
+server.port=8081
 
-   spring.datasource.url=jdbc:postgresql://localhost:5432/ecom  
-   spring.datasource.username=youruser  
-   spring.datasource.password=yourpassword  
-   spring.jpa.hibernate.ddl-auto=update  
-   spring.jpa.show-sql=true  
-   spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect  
+# Keycloak (JWT validation)
+spring.security.oauth2.resourceserver.jwt.issuer-uri=http://192.168.1.90:8080/realms/SpringSecurityRealm
 
-   keycloak.auth-server-url=http://localhost:8080  
-   keycloak.realm=your-realm  
-   keycloak.resource=your-client-id  
-   keycloak.credentials.secret=your-client-secret
+# Keycloak Admin Client (for Feign)
+keycloak.url=http://192.168.1.90:8080
+keycloak.realm=SpringSecurityRealm
+keycloak.client-id=ecommerce-springboot-client
+keycloak.client-secret=YZXe4T9UtUgAw0WaSMjsKbfIPr8OfEIE
 
-3. (Optional) Start PostgreSQL with Docker
+# PostgreSQL DB
+spring.datasource.url=jdbc:postgresql://192.168.1.90:5433/ecom_db
+spring.datasource.username=ecom_user
+spring.datasource.password=ecom_pass
 
-   docker run --name ecom-postgres -e POSTGRES_PASSWORD=yourpassword -e POSTGRES_DB=ecom -p 5432:5432 -d postgres:15
+# Liquibase
+spring.liquibase.enabled=true
+spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.yaml
 
-   Or use `docker-compose.yml`:
+# AWS S3
+aws.s3.bucket=matmlr-projectecom-product-images
+```
 
-   version: '3.1'  
+Also export the following environment variables:
 
-   services:  
-     postgres:  
-       image: postgres:15  
-       container_name: ecom-postgres  
-       restart: always  
-       environment:  
-         POSTGRES_DB: ecom  
-         POSTGRES_USER: youruser  
-         POSTGRES_PASSWORD: yourpassword  
-       ports:  
-         - "5432:5432"  
-       volumes:  
-         - pgdata:/var/lib/postgresql/data  
+```bash
+export AWS_ACCESS_KEY_ID=your_key
+export AWS_SECRET_ACCESS_KEY=your_secret
+export AWS_REGION=us-east-1
+```
 
-   volumes:  
-     pgdata:  
+### 3. Run the project
 
-   docker-compose up -d
+```bash
+./gradlew bootRun
+```
 
-4. Run the application
-
-   ./gradlew bootRun
-
-   Or build and run the JAR:
-
-   ./gradlew build  
-   java -jar build/libs/ecom-backend-*.jar
-
-The app will be available at: http://localhost:8080
+Or run `EcomApplication.java` directly via IntelliJ.
 
 ---
 
-## 📬 Sample Endpoints
+## 🧠 Learning Goals
 
-| Method | Endpoint                      | Description                           |
-|--------|-------------------------------|---------------------------------------|
-| GET    | `/api/products`               | Get paginated product list            |
-| POST   | `/api/cart/add`               | Add item to cart                      |
-| GET    | `/api/cart`                   | Get current user's cart               |
-| DELETE | `/api/cart/remove/{productId}`| Remove item from cart                 |
-| POST   | `/api/orders/checkout`        | Checkout current cart                 |
-| GET    | `/api/orders`                 | Get user's order history              |
-| GET    | `/api/admin/orders`           | Admin: list all orders                |
-| PUT    | `/api/admin/orders/status`    | Admin: update order status            |
+This project was built with the goal of practicing:
 
----
-
-## 📦 Postman Collection
-
-A Postman collection will be provided in the repository to make it easy to test all endpoints.
+- Clean REST API architecture
+- Spring Security + OAuth2 with Keycloak
+- JWT-based role authorization
+- Integration with AWS S3 (v2 SDK)
+- API documentation with Swagger
+- Pagination and filtering with Spring Data
+- Database migrations using Liquibase
+- DTO mapping with MapStruct
+- Exception handling with custom response structure
 
 ---
 
-## 📈 Future Improvements
+## 🌐 Related Projects
 
-- Add integration/service tests
-- Separate `dev`/`prod` profiles
-- Product reviews and rating system
-- Payment gateway integration
-- Email notifications
+- [🛍️ Ecom Frontend (React + Vite)](https://github.com/Matheus-Malara/ecom-frontend)
+- [🛠️ Ecom Admin Dashboard (React + Vite)](https://github.com/Matheus-Malara/ecom-frontend-admin)
 
 ---
 
-## 📄 License
+## 🛡️ Security Note
 
-This project is licensed under the MIT License.  
-Use it freely for educational purposes or as a reference for your own backend architecture.
+**Do not expose sensitive credentials.**  
+Be sure to add `application.properties`, `.env`, and other secret files to `.gitignore`.
