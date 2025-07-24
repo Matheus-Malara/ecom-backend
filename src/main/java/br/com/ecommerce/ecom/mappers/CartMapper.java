@@ -29,7 +29,7 @@ public class CartMapper {
 
         return CartResponseDTO.builder()
                 .cartId(cart.getId())
-                .anonymousId(cart.getAnonymousId()) // adicionado aqui
+                .anonymousId(cart.getAnonymousId())
                 .items(itemDTOs)
                 .totalItems(totalItems)
                 .totalAmount(totalAmount)

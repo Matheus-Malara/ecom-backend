@@ -153,11 +153,9 @@ public class KeycloakLoginService {
 
 
         if (status == HttpStatus.UNAUTHORIZED || status == HttpStatus.BAD_REQUEST) {
-            // Credenciais inválidas
             log.warn("[{}] Invalid credentials for user {}: {}", TraceIdGenerator.getTraceId(), email, status);
             throw new BusinessException("Invalid credentials", ErrorCode.INVALID_CREDENTIALS, HttpStatus.UNAUTHORIZED);
         } else {
-            // Problema na infra do Keycloak
             log.error("[{}] Keycloak authentication failed for user {}: {}", TraceIdGenerator.getTraceId(), email, status);
             throw new KeycloakAuthenticationException("Failed to login via Keycloak: " + status);
         }

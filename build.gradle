@@ -24,7 +24,7 @@ repositories {
 }
 
 ext {
-    set('springCloudVersion', "2023.0.1") // esta versão é compatível com Spring Boot 3.3.x
+    set('springCloudVersion', "2023.0.1")
 }
 
 dependencies {
