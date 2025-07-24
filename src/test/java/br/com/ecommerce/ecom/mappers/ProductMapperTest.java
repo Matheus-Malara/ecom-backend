@@ -110,7 +110,7 @@ class ProductMapperTest {
                 .stock(30)
                 .weightGrams(900)
                 .flavor("Strawberry")
-                .images(null) // edge case
+                .images(null)
                 .active(true)
                 .build();
 

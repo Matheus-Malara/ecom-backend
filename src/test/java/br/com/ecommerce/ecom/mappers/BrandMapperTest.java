@@ -70,10 +70,10 @@ class BrandMapperTest {
 
         brandMapper.updateEntityFromDTO(dto, existing);
 
-        assertEquals(5L, existing.getId()); // remains unchanged
+        assertEquals(5L, existing.getId());
         assertEquals("Updated Brand", existing.getName());
         assertEquals("Updated brand description", existing.getDescription());
         assertEquals("https://updated.com/logo.png", existing.getLogoUrl());
-        assertFalse(existing.getActive()); // remains unchanged
+        assertFalse(existing.getActive());
     }
 }

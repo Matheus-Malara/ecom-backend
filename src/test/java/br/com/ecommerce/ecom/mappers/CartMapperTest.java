@@ -22,7 +22,6 @@ class CartMapperTest {
 
     @Test
     void toResponse_shouldMapCartToDtoCorrectly() {
-        // Arrange - Create a product with an image
         ProductImage image = ProductImage.builder()
                 .id(1L)
                 .imageUrl("https://example.com/image.png")
@@ -89,7 +88,7 @@ class CartMapperTest {
                 .id(101L)
                 .name("Creatine")
                 .price(new BigDecimal("89.90"))
-                .images(List.of()) // no images
+                .images(List.of())
                 .build();
 
         CartItem item = CartItem.builder()

@@ -31,7 +31,7 @@ class CategoryMapperTest {
         assertEquals("Pre-Workout", entity.getName());
         assertEquals("Boosts energy before training.", entity.getDescription());
         assertEquals("https://example.com/preworkout.png", entity.getImageUrl());
-        assertEquals(true, entity.getActive()); // default from builder
+        assertEquals(true, entity.getActive());
     }
 
     @Test
@@ -70,10 +70,10 @@ class CategoryMapperTest {
 
         categoryMapper.updateEntityFromDTO(dto, existing);
 
-        assertEquals(5L, existing.getId()); // unchanged
+        assertEquals(5L, existing.getId());
         assertEquals("Updated Category", existing.getName());
         assertEquals("New description for the category.", existing.getDescription());
         assertEquals("https://new.com/img.png", existing.getImageUrl());
-        assertFalse(existing.getActive()); // unchanged
+        assertFalse(existing.getActive());
     }
 }
